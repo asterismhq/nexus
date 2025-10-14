@@ -9,7 +9,7 @@ requires-python = ">=3.9"
 dependencies = [
     "fastapi>=0.115.0",
     "httpx>=0.28.1",
-    "mlx-lm>=0.13.0",
+    "mlx-lm>=0.13.0; sys_platform == 'darwin'",
     "ollama>=0.3.0",
     "pydantic-settings>=2.0.0",
     "python-dotenv==1.0.1",
