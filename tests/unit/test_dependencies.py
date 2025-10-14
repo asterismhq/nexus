@@ -40,14 +40,3 @@ def test_get_llm_client_falls_back_to_ollama_on_unknown_backend() -> None:
     client = get_llm_client(settings=app_settings)
 
     assert isinstance(client, MockOllamaClient)
-
-
-def test_get_llm_client_uses_default_settings_when_none_provided() -> None:
-    """get_llm_client should use get_app_settings() when settings=None."""
-    # Clear the cache to ensure fresh settings
-    get_app_settings.cache_clear()
-
-    client = get_llm_client(settings=None)
-
-    # Should not raise an error and return a valid client
-    assert client is not None

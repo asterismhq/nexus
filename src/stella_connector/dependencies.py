@@ -7,6 +7,8 @@ import logging
 from functools import lru_cache
 from typing import Callable, Type
 
+from fastapi import Depends
+
 from .clients.mlx_client import MLXClient
 from .clients.ollama_client import OllamaClient
 from .config import AppSettings, MLXSettings, OllamaSettings
@@ -70,7 +72,9 @@ def get_app_settings() -> AppSettings:
     return AppSettings()
 
 
-def get_llm_client(settings: AppSettings | None = None) -> LLMClientProtocol:
+def get_llm_client(
+    settings: AppSettings = Depends(get_app_settings),
+) -> LLMClientProtocol:
     """Provide the appropriate LLM client based on application settings.
 
     This function serves as a FastAPI dependency provider. It selects and
@@ -78,7 +82,7 @@ def get_llm_client(settings: AppSettings | None = None) -> LLMClientProtocol:
     backend and mock settings.
 
     Args:
-        settings: Application settings. If None, will be loaded via get_app_settings().
+        settings: Application settings, injected by FastAPI.
 
     Returns:
         An instance of the configured LLM client.
@@ -86,17 +90,12 @@ def get_llm_client(settings: AppSettings | None = None) -> LLMClientProtocol:
     Raises:
         ValueError: If an unknown backend is configured and fallback fails.
     """
-    if settings is None:
-        settings = get_app_settings()
-
     backend = (settings.llm_backend or "ollama").lower()
 
     # Determine if we should use a mock client
-    use_mock = False
-    if backend == "ollama" and settings.use_mock_ollama:
-        use_mock = True
-    elif backend == "mlx" and settings.use_mock_mlx:
-        use_mock = True
+    use_mock = (backend == "ollama" and settings.use_mock_ollama) or (
+        backend == "mlx" and settings.use_mock_mlx
+    )
 
     # Select the appropriate factory
     factory_registry = MOCK_FACTORIES if use_mock else CLIENT_FACTORIES
