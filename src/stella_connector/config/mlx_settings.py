@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings
 class MLXSettings(BaseSettings):
     """Configuration values for the MLX backend."""
 
+    model_config = {"env_prefix": "STELLA_CONN_MLX_"}
+
     model: str = "mlx-community/Phi-3-mini-4k-instruct-8bit"
     temperature: float = 0.7
     max_tokens: int | None = None

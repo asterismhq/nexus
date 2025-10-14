@@ -6,6 +6,8 @@ from pydantic_settings import BaseSettings
 class AppSettings(BaseSettings):
     """Minimal settings exposed to the dependency container."""
 
+    model_config = {"env_prefix": "STELLA_CONN_"}
+
     app_name: str = "stella-connector"
     debug: bool = False
     llm_backend: str = "ollama"

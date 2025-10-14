@@ -76,13 +76,13 @@ The container listens on port `8000` and exposes `/health` for readiness checks.
 
 Environment variables are loaded from `.env` (managed by `just setup`):
 
-- `FAPI_TMPL_APP_NAME` – application display name (default `stella-connector`).
-- `FAPI_TMPL_BIND_IP` / `FAPI_TMPL_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
-- `FAPI_TMPL_DEV_PORT` – port used by `just dev` (default `8000`).
-- `LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
-- `USE_MOCK_OLLAMA` / `USE_MOCK_MLX` – toggle mock clients for tests.
-- `OLLAMA_HOST`, `OLLAMA_PORT`, `OLLAMA_MODEL` – Ollama connection details.
-- `MLX_MODEL` – identifier for the MLX model to load.
+- `STELLA_CONN_APP_NAME` – application display name (default `stella-connector`).
+- `STELLA_CONN_BIND_IP` / `STELLA_CONN_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
+- `STELLA_CONN_DEV_PORT` – port used by `just dev` (default `8000`).
+- `STELLA_CONN_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
+- `STELLA_CONN_USE_MOCK_OLLAMA` / `STELLA_CONN_USE_MOCK_MLX` – toggle mock clients for tests.
+- `STELLA_CONN_OLLAMA_HOST`, `STELLA_CONN_OLLAMA_PORT`, `STELLA_CONN_OLLAMA_MODEL` – Ollama connection details.
+- `STELLA_CONN_MLX_MODEL` – identifier for the MLX model to load.
 
 ## ✅ Health Check
 

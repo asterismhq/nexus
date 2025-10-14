@@ -4,9 +4,9 @@
 
 set dotenv-load
 
-APP_NAME := env("FAPI_TMPL_APP_NAME", "stella-connector")
-HOST_IP := env("FAPI_TMPL_BIND_IP", "127.0.0.1")
-DEV_PORT := env("FAPI_TMPL_DEV_PORT", "8000")
+APP_NAME := env("STELLA_CONN_APP_NAME", "stella-connector")
+HOST_IP := env("STELLA_CONN_BIND_IP", "127.0.0.1")
+DEV_PORT := env("STELLA_CONN_DEV_PORT", "8000")
 
 # default target
 default: help

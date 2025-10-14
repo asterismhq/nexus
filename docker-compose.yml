@@ -3,6 +3,6 @@ services:
     build:
       target: production
     ports:
-      - "${FAPI_TMPL_BIND_IP:-0.0.0.0}:${FAPI_TMPL_BIND_PORT:-8000}:8000"
+      - "${STELLA_CONN_BIND_IP:-0.0.0.0}:${STELLA_CONN_BIND_PORT:-8000}:8000"
     env_file:
       - .env
