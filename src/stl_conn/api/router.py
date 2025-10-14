@@ -22,10 +22,19 @@ async def invoke_chat(
     llm_client: LLMClientProtocol = Depends(get_llm_client),
 ) -> Dict[str, Any]:
     """Invoke the configured LLM backend with the provided input."""
-    # Extract messages from input_data - for now, assume input_data has "input_data" key
-    messages = input_data.get("input_data", {}).get("input", "")
+    request_payload = input_data.get("input_data", {})
+    if not isinstance(request_payload, dict):
+        request_payload = {}
+
+    messages = request_payload.get("input", "")
     if isinstance(messages, str):
         messages = [{"role": "user", "content": messages}]
 
-    response = await llm_client.invoke(messages)
+    backend_options = {
+        key: value
+        for key, value in request_payload.items()
+        if key != "input"
+    }
+
+    response = await llm_client.invoke(messages, **backend_options)
     return {"output": response}

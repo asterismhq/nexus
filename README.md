@@ -38,7 +38,7 @@ just format   # auto-format with black and ruff --fix
 
 ```
 ├── src/
-│   └── stella_connector/
+│   └── stl_conn/
 │       ├── api/
 │       │   ├── main.py          # FastAPI app factory and router registration
 │       │   └── router.py        # API routes with dependency injection
@@ -101,22 +101,29 @@ Content-Type: application/json
 
 {
   "input_data": {
-    "input": "Your message here"
+    "input": "Explain quantum computing in simple terms",
+    "temperature": 0.5,
+    "max_tokens": 1024,
+    "stream": false
   }
 }
 ```
+
+All keys nested under `input_data` other than `input` are transparently forwarded to the active LLM backend. This allows you to
+leverage backend-specific options (e.g., `temperature`, `max_tokens`, `top_p`) without changing the API surface. Any new
+parameters introduced by future backends are automatically passed through.
 
 ## 🏗️ Dependency Injection
 
 This project uses **FastAPI's native dependency injection system** with the `Depends` mechanism:
 
-- **`src/stella_connector/dependencies.py`**: Centralized dependency providers using `Depends()`
+- **`src/stl_conn/dependencies.py`**: Centralized dependency providers using `Depends()`
 - **Factory Pattern**: Extensible client registration via `CLIENT_FACTORIES` and `MOCK_FACTORIES`
 - **Easy Testing**: Use `app.dependency_overrides` to inject mocks during testing
 
 ### Adding a New LLM Backend
 
-1. Create your client in `src/stella_connector/clients/`
+1. Create your client in `src/stl_conn/clients/`
 2. Register it in `dependencies.py`:
    ```python
    CLIENT_FACTORIES["your_backend"] = lambda settings: YourClient(...)
