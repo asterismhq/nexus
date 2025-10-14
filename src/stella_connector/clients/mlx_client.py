@@ -23,7 +23,9 @@ class MLXClient(LLMClientProtocol):
         prompt = self._format_messages(messages)
         generation_kwargs = {**self._settings.to_model_kwargs(), **kwargs}
         model, tokenizer = self._ensure_model_loaded()
-        return await asyncio.to_thread(self._generate, model, tokenizer, prompt, generation_kwargs)
+        return await asyncio.to_thread(
+            self._generate, model, tokenizer, prompt, generation_kwargs
+        )
 
     def bind_tools(self, tools: list[Any]) -> "MLXClient":
         self._tools = tools
@@ -39,7 +41,9 @@ class MLXClient(LLMClientProtocol):
             self._model, self._tokenizer = load(self._settings.model)
         return self._model, self._tokenizer
 
-    def _generate(self, model: Any, tokenizer: Any, prompt: str, kwargs: dict[str, Any]) -> Any:
+    def _generate(
+        self, model: Any, tokenizer: Any, prompt: str, kwargs: dict[str, Any]
+    ) -> Any:
         from mlx_lm import generate
 
         return generate(model, tokenizer, prompt, **kwargs)

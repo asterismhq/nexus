@@ -14,8 +14,12 @@ class OllamaClient(LLMClientProtocol):
     def __init__(self, settings: OllamaSettings) -> None:
         try:
             from ollama import AsyncClient
-        except ImportError as exc:  # pragma: no cover - exercised in runtime environments
-            raise RuntimeError("ollama-python must be installed to use OllamaClient") from exc
+        except (
+            ImportError
+        ) as exc:  # pragma: no cover - exercised in runtime environments
+            raise RuntimeError(
+                "ollama-python must be installed to use OllamaClient"
+            ) from exc
 
         self._settings = settings
         self._client = AsyncClient(host=settings.base_url)

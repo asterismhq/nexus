@@ -93,3 +93,27 @@ GET /health -> {"status": "ok"}
 ```
 
 Use this as a foundation for adding your own routes, dependencies, and persistence layers.
+
+## SDK
+
+This repository includes an SDK for interacting with the Stella Connector API.
+
+### Installation
+
+To install the SDK, you can add it as a dependency using uv:
+
+```bash
+uv add stella-connector --group sdk
+```
+
+### Usage
+
+```python
+from stella_connector_sdk.stella_client import StellaConnectorClient
+
+client = StellaConnectorClient(base_url="http://localhost:8000")  # Default port for stella-connector
+response = client.invoke(
+    input_data={"input": "Hello, world!"}
+)
+print(response)
+```

@@ -1,4 +1,5 @@
 """Protocol definition for language model client interface."""
+
 from __future__ import annotations
 
 from typing import Any, Protocol
@@ -15,4 +16,3 @@ class LLMClientProtocol(Protocol):
 
     def bind_tools(self, tools: list[Any]) -> "LLMClientProtocol":
         """Bind tools to the LLM client for function calling."""
-

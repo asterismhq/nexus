@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        test_target: [unit-test, intg-test]
+        test_target: [unit-test, sdk-test, intg-test]
       fail-fast: false
 
     steps:

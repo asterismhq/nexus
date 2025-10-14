@@ -88,7 +88,9 @@ class DependencyContainer:
         return self._mock_mlx_client
 
     def _create_mock_ollama_client(self) -> LLMClientProtocol:
-        mock_class = self._import_mock_class("dev.mocks.mock_ollama_client.MockOllamaClient")
+        mock_class = self._import_mock_class(
+            "dev.mocks.mock_ollama_client.MockOllamaClient"
+        )
         return mock_class(self.ollama_settings)
 
     def _create_mock_mlx_client(self) -> LLMClientProtocol:
