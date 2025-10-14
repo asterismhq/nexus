@@ -1,4 +1,4 @@
-name: Run Tests
+name: Run Local Tests
 
 on:
   workflow_call:
@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        test_target: [unit-test, intg-test, build-test, e2e-test]
+        test_target: [unit-test, intg-test]
       fail-fast: false
 
     steps:
@@ -36,4 +36,3 @@ jobs:
       - name: Run tests
         run: |
           just ${{ matrix.test_target }}
-
