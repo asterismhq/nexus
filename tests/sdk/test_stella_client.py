@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-
 from stella_connector_sdk.stella_connector_client import StellaConnectorClient
 
 
@@ -20,4 +19,3 @@ async def test_stella_client_invoke():
             "http://example.com/api/v1/chat/invoke", json={"input": "test"}
         )
         assert result == {"result": "test"}
-

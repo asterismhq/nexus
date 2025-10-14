@@ -19,4 +19,3 @@ class StellaConnectorClient:
 
 # For static type checking
 _: StellaConnectorClientProtocol = StellaConnectorClient(base_url="")
-

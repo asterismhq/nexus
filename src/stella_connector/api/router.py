@@ -26,4 +26,3 @@ async def invoke_chat(request: Request, input_data: Dict[str, Any]) -> Dict[str,
 
     response = await llm_client.invoke(messages)
     return {"output": response}
-

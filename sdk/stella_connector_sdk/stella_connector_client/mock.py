@@ -14,4 +14,3 @@ class MockStellaConnectorClient:
 
 # For static type checking
 _: StellaConnectorClientProtocol = MockStellaConnectorClient()
-
