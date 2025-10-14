@@ -6,7 +6,7 @@ from pydantic_settings import BaseSettings
 class OllamaSettings(BaseSettings):
     """Configuration for interacting with an Ollama deployment."""
 
-    model_config = {"env_prefix": "STELLA_CONN_OLLAMA_"}
+    model_config = {"env_prefix": "STL_CONN_OLLAMA_"}
 
     host: str = "http://localhost"
     port: int = 11434

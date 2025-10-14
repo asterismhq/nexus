@@ -1,12 +1,12 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from stella_connector_sdk.stella_connector_client import StellaConnectorClient
+from stl_conn_sdk.stl_conn_client import StlConnClient
 
 
 @pytest.mark.asyncio
-async def test_stella_client_invoke():
-    client = StellaConnectorClient(base_url="http://example.com")
+async def test_stl_conn_client_invoke():
+    client = StlConnClient(base_url="http://example.com")
     mock_response = Mock()
     mock_response.json.return_value = {"result": "test"}
     mock_response.raise_for_status.return_value = None

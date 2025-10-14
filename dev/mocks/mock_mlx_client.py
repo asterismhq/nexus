@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from stella_connector.config.mlx_settings import MLXSettings
-from stella_connector.protocols.llm_client_protocol import LLMClientProtocol
+from stl_conn.config.mlx_settings import MLXSettings
+from stl_conn.protocols.llm_client_protocol import LLMClientProtocol
 
 
 class MockMLXClient(LLMClientProtocol):

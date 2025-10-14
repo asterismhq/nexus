@@ -1,4 +1,4 @@
-"""HTTP routes exposed by the stella-connector service."""
+"""HTTP routes exposed by the stl-conn service."""
 
 from typing import Any, Dict
 

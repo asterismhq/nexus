@@ -1,6 +1,6 @@
-# stella-connector-api
+# Stella Connector API
 
-`stella-connector` is a configurable FastAPI service that mediates LLM inference across pluggable backends. It provides a clean scaffold with dependency injection, environment-aware configuration, dockerisation, and a lightweight test suite so you can start new services quickly without dragging in domain-specific code.
+`Stella Connector` is a configurable FastAPI service that mediates LLM inference across pluggable backends. It provides a clean scaffold with dependency injection, environment-aware configuration, dockerisation, and a lightweight test suite so you can start new services quickly without dragging in domain-specific code.
 
 ## 🚀 Getting Started
 
@@ -77,13 +77,13 @@ The container listens on port `8000` and exposes `/health` for readiness checks.
 
 Environment variables are loaded from `.env` (managed by `just setup`):
 
-- `STELLA_CONN_APP_NAME` – application display name (default `stella-connector`).
-- `STELLA_CONN_BIND_IP` / `STELLA_CONN_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
-- `STELLA_CONN_DEV_PORT` – port used by `just dev` (default `8000`).
-- `STELLA_CONN_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
-- `STELLA_CONN_USE_MOCK_OLLAMA` / `STELLA_CONN_USE_MOCK_MLX` – toggle mock clients for tests.
-- `STELLA_CONN_OLLAMA_HOST`, `STELLA_CONN_OLLAMA_PORT`, `STELLA_CONN_OLLAMA_MODEL` – Ollama connection details.
-- `STELLA_CONN_MLX_MODEL` – identifier for the MLX model to load.
+- `STL_CONN_APP_NAME` – application display name (default `stl-conn`).
+- `STL_CONN_BIND_IP` / `STL_CONN_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
+- `STL_CONN_DEV_PORT` – port used by `just dev` (default `8000`).
+- `STL_CONN_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
+- `STL_CONN_USE_MOCK_OLLAMA` / `STL_CONN_USE_MOCK_MLX` – toggle mock clients for tests.
+- `STL_CONN_OLLAMA_HOST`, `STL_CONN_OLLAMA_PORT`, `STL_CONN_OLLAMA_MODEL` – Ollama connection details.
+- `STL_CONN_MLX_MODEL` – identifier for the MLX model to load.
 
 ## 🔌 API Endpoints
 

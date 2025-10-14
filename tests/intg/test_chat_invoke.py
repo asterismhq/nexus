@@ -4,7 +4,7 @@ import pytest
 from fastapi import FastAPI
 
 from dev.mocks.mock_ollama_client import MockOllamaClient
-from stella_connector.dependencies import get_llm_client
+from stl_conn.dependencies import get_llm_client
 
 
 @pytest.mark.asyncio

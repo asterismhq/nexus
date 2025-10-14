@@ -15,25 +15,17 @@ Stella Connector is a FastAPI service that mediates LLM inference across multipl
 - **Error Handling**: Comprehensive error handling with detailed responses
 - **Flexible Configuration**: Environment-aware configuration
 
-## Installation
-
-Install the SDK dependencies:
-
-```bash
-uv sync --group sdk
-```
-
 ## Quick Start
 
 ### Basic Usage
 
 ```python
 import asyncio
-from stella_connector_sdk.stella_connector_client import StellaConnectorClient
+from stl_conn_sdk.stl_conn_client import StlConnClient
 
 async def main():
     # Initialize client with base URL
-    client = StellaConnectorClient(base_url="http://localhost:8000")
+    client = StlConnClient(base_url="http://localhost:8000")
 
     # Invoke LLM with input data
     response = await client.invoke(input_data={"input": "Hello, world!"})
@@ -48,11 +40,11 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from stella_connector_sdk.stella_connector_client import StellaConnectorClient
+from stl_conn_sdk.stl_conn_client import StlConnClient
 
 async def main():
-    client = StellaConnectorClient(
-        base_url="https://your-stella-connector-instance.com",
+    client = StlConnClient(
+        base_url="https://your-stl-conn-instance.com",
         timeout=30.0  # Custom timeout in seconds
     )
 
@@ -69,18 +61,18 @@ asyncio.run(main())
 
 The SDK respects the following environment variables:
 
-- `STELLA_CONN_API_BASE_URL`: Default base URL for clients
-- `STELLA_CONN_API_TIMEOUT`: Default timeout for requests
+- `STL_CONN_API_BASE_URL`: Default base URL for clients
+- `STL_CONN_API_TIMEOUT`: Default timeout for requests
 
 ### Mock Client for Testing
 
 ```python
 import asyncio
-from stella_connector_sdk.stella_connector_client import MockStellaConnectorClient
+from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 async def main():
     # Create mock client
-    client = MockStellaConnectorClient()
+    client = MockStlConnClient()
 
     # Invoke returns predefined response
     response = await client.invoke(input_data={"input": "test message"})
@@ -99,11 +91,11 @@ asyncio.run(main())
 
 ```python
 import pytest
-from stella_connector_sdk.stella_connector_client import MockStellaConnectorClient
+from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 @pytest.mark.asyncio
 async def test_my_function():
-    mock_client = MockStellaConnectorClient()
+    mock_client = MockStlConnClient()
 
     # Call your function that uses the client
     result = await my_function_that_uses_client(mock_client)
@@ -118,12 +110,12 @@ async def test_my_function():
 
 ## API Reference
 
-### StellaConnectorClient
+### StlConnClient
 
 #### Constructor
 
 ```python
-StellaConnectorClient(base_url: str, timeout: float = 10.0)
+StlConnClient(base_url: str, timeout: float = 10.0)
 ```
 
 - `base_url`: Base URL of the Stella Connector API (e.g., "http://localhost:8000")
@@ -148,12 +140,12 @@ Invokes the LLM with the provided input data.
 - `httpx.HTTPStatusError`: For HTTP error responses
 - `ValueError`: For invalid input data
 
-### MockStellaConnectorClient
+### MockStlConnClient
 
 #### Constructor
 
 ```python
-MockStellaConnectorClient()
+MockStlConnClient()
 ```
 
 #### Methods
@@ -166,31 +158,10 @@ Returns a mock response and records the invocation.
 - `input_data`: Input data (recorded but not processed)
 
 **Returns:**
-- `{"output": "This is a mock response from Stella Connector."}`
+- `{"output": "This is a mock response from Stl-Conn."}`
 
 #### Properties
 
 ##### `invocations: List[Dict[str, Any]]`
 
 List of all input_data passed to `invoke()` calls. Useful for testing.
-
-## Development
-
-### Running Tests
-
-```bash
-# From repository root
-just test
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
-
-## License
-
-This SDK is part of the stella-connector project. See main repository for license information.

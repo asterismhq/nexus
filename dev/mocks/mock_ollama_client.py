@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from stella_connector.config.ollama_settings import OllamaSettings
-from stella_connector.protocols.llm_client_protocol import LLMClientProtocol
+from stl_conn.config.ollama_settings import OllamaSettings
+from stl_conn.protocols.llm_client_protocol import LLMClientProtocol
 
 
 class MockOllamaClient(LLMClientProtocol):

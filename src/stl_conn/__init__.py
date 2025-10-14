@@ -1,4 +1,4 @@
-"""stella-connector package exposing FastAPI app and configuration."""
+"""stl-conn package exposing FastAPI app and configuration."""
 
 __all__ = [
     "api",
