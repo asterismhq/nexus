@@ -6,7 +6,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    env:
+      UV_CACHE_DIR: ./.uv-cache
     strategy:
       matrix:
         test_target: [build-test, e2e-test]
