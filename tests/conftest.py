@@ -1,10 +1,10 @@
-"""Shared pytest fixtures for the fapi-tmpl project template."""
+"""Shared pytest fixtures for the stella-connector project."""
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from fapi_tmpl.api.main import app as fastapi_app
+from stella_connector.api.main import app as fastapi_app
 
 
 @pytest.fixture()

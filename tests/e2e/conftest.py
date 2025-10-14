@@ -10,10 +10,10 @@ from collections.abc import AsyncGenerator, Generator
 import httpx
 import pytest
 
-PROJECT_NAME = os.getenv("FAPI_TMPL_E2E_PROJECT", "fapi-tmpl-e2e")
-COMPOSE_FILE = os.getenv("FAPI_TMPL_E2E_COMPOSE_FILE", "docker-compose.yml")
-HOST_IP = os.getenv("FAPI_TMPL_E2E_HOST", "127.0.0.1")
-HOST_PORT = os.getenv("FAPI_TMPL_E2E_PORT", "8100")
+PROJECT_NAME = os.getenv("STELLA_CONN_E2E_PROJECT", "stella-connector-e2e")
+COMPOSE_FILE = os.getenv("STELLA_CONN_E2E_COMPOSE_FILE", "docker-compose.yml")
+HOST_IP = os.getenv("STELLA_CONN_E2E_HOST", "127.0.0.1")
+HOST_PORT = os.getenv("STELLA_CONN_E2E_PORT", "8100")
 
 
 def _wait_for_health(url: str, timeout_seconds: int = 60) -> bool:
@@ -38,8 +38,8 @@ def e2e_environment() -> Generator[None, None, None]:
     """Start the FastAPI app via Docker Compose for end-to-end tests."""
 
     compose_env = os.environ.copy()
-    compose_env["FAPI_TMPL_BIND_IP"] = HOST_IP
-    compose_env["FAPI_TMPL_BIND_PORT"] = HOST_PORT
+    compose_env["STELLA_CONN_BIND_IP"] = HOST_IP
+    compose_env["STELLA_CONN_BIND_PORT"] = HOST_PORT
 
     up_command = [
         "docker",
@@ -73,7 +73,7 @@ def e2e_environment() -> Generator[None, None, None]:
                 f"\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
             )
 
-        health_url = f"http://{compose_env['FAPI_TMPL_BIND_IP']}:{compose_env['FAPI_TMPL_BIND_PORT']}/health"
+        health_url = f"http://{compose_env['STELLA_CONN_BIND_IP']}:{compose_env['STELLA_CONN_BIND_PORT']}/health"
         if not _wait_for_health(health_url):
             logs_command = [
                 "docker",

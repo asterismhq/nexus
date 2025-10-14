@@ -1,6 +1,6 @@
-# fapi-tmpl
+# stella-connector-api
 
-`fapi-tmpl` is a minimal, database-independent FastAPI project template. It provides a clean scaffold with dependency injection, environment-aware configuration, dockerisation, and a lightweight test suite so you can start new services quickly without dragging in domain-specific code.
+`stella-connector` is a configurable FastAPI service that mediates LLM inference across pluggable backends. It provides a clean scaffold with dependency injection, environment-aware configuration, dockerisation, and a lightweight test suite so you can start new services quickly without dragging in domain-specific code.
 
 ## 🚀 Getting Started
 
@@ -38,14 +38,14 @@ just format   # auto-format with black and ruff --fix
 
 ```
 ├── src/
-│   └── fapi_tmpl/
+│   └── stella_connector/
 │       ├── api/
-│       │   ├── main.py      # FastAPI app factory and router registration
-│       │   └── router.py    # Health check endpoint
-│       ├── config/
-│       │   ├── __init__.py
-│       │   └── app_settings.py  # Pydantic settings
-│       └── container.py    # Minimal dependency container
+│       │   ├── main.py          # FastAPI app factory and router registration
+│       │   └── router.py        # Health check endpoint
+│       ├── clients/             # Concrete LLM client implementations
+│       ├── config/              # Pydantic settings modules
+│       ├── container.py         # Dependency injection container
+│       └── protocols/           # Shared interface definitions
 ├── tests/
 │   ├── unit/
 │   │   └── test_dependency_container.py
@@ -76,9 +76,13 @@ The container listens on port `8000` and exposes `/health` for readiness checks.
 
 Environment variables are loaded from `.env` (managed by `just setup`):
 
-- `FAPI_TMPL_APP_NAME` – application display name (default `fapi-tmpl`).
-- `FAPI_TMPL_BIND_IP` / `FAPI_TMPL_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
-- `FAPI_TMPL_DEV_PORT` – port used by `just dev` (default `8000`).
+- `STELLA_CONN_APP_NAME` – application display name (default `stella-connector`).
+- `STELLA_CONN_BIND_IP` / `STELLA_CONN_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
+- `STELLA_CONN_DEV_PORT` – port used by `just dev` (default `8000`).
+- `STELLA_CONN_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
+- `STELLA_CONN_USE_MOCK_OLLAMA` / `STELLA_CONN_USE_MOCK_MLX` – toggle mock clients for tests.
+- `STELLA_CONN_OLLAMA_HOST`, `STELLA_CONN_OLLAMA_PORT`, `STELLA_CONN_OLLAMA_MODEL` – Ollama connection details.
+- `STELLA_CONN_MLX_MODEL` – identifier for the MLX model to load.
 
 ## ✅ Health Check
 
@@ -89,3 +93,7 @@ GET /health -> {"status": "ok"}
 ```
 
 Use this as a foundation for adding your own routes, dependencies, and persistence layers.
+
+## SDK
+
+This repository includes a Python SDK for interacting with the Stella Connector API. See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
