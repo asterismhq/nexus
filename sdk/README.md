@@ -8,62 +8,57 @@ Stella Connector is a FastAPI service that mediates LLM inference across multipl
 
 ### Key Features
 
-- **Unified API**: Single interface for multiple LLM backends
-- **Async Support**: Full asyncio compatibility for high-performance applications
-- **Type Safety**: Full type hints and protocol-based design
-- **Mock Client**: Built-in mock client for testing and development
-- **Optional LangChain Wrapper**: Toggle between raw dict responses and LangChain-friendly objects
-- **Error Handling**: Comprehensive error handling with detailed responses
-- **Flexible Configuration**: Environment-aware configuration
+- **Unified API**: Single interface for multiple LLM backends.
+- **LangChain Native**: Accepts LangChain message objects and returns `LangChainResponse` when requested.
+- **Tool Binding**: `bind_tools()` mirrors LangChain patterns for function calling.
+- **Async Support**: Full asyncio compatibility for high-performance applications.
+- **Type Safety**: Full type hints and protocol-based design.
+- **Mock Client**: Built-in mock client with matching serialization and tool binding.
+- **Error Handling**: Comprehensive error handling with detailed responses.
+- **Flexible Configuration**: Environment-aware configuration.
 
 ## Quick Start
 
-### Basic Usage
+### LangChain Messages (Recommended)
 
 ```python
 import asyncio
-from stl_conn_sdk.stl_conn_client import StlConnClient
-
-async def main():
-    # Initialize client with base URL
-    client = StlConnClient(base_url="http://localhost:8000")
-
-    # Invoke LLM with input data
-    response = await client.invoke(input_data={"input": "Hello, world!"})
-
-    print(response)
-    # {"output": "Hello! How can I help you today?"}
-
-asyncio.run(main())
-```
-
-### With Custom Configuration
-
-```python
-import asyncio
+from langchain_core.messages import HumanMessage
 from stl_conn_sdk.stl_conn_client import StlConnClient
 
 async def main():
     client = StlConnClient(
-        base_url="https://your-stl-conn-instance.com",
-        response_format="langchain",  # Optional LangChain-compatible response wrapper
-        timeout=30.0,  # Optional timeout in seconds
+        base_url="http://localhost:8000",
+        response_format="langchain",
     )
 
-    response = await client.invoke(input_data={
-        "input": "Explain quantum computing in simple terms",
-        "temperature": 0.7,
-        "max_tokens": 500
-    })
-
+    response = await client.invoke([HumanMessage(content="Hello, world!")])
     print(response.content)
 
 asyncio.run(main())
 ```
 
-The SDK respects the following environment variable:
+### Tool Binding
 
-- `STL_CONN_API_BASE_URL`: Default base URL for clients
+```python
+import asyncio
+from stl_conn_sdk.stl_conn_client import StlConnClient
+
+async def main():
+    client = StlConnClient(base_url="https://your-stl-conn-instance.com")
+    client.bind_tools([{"name": "calculator"}])
+
+    response = await client.invoke([{"role": "user", "content": "What is 2+2?"}])
+    print(response)
+
+asyncio.run(main())
+```
+
+### Dict Payloads Are Still Supported
+
+```python
+response = await client.invoke({"input": "Explain quantum computing", "temperature": 0.7})
+```
 
 ### Mock Client for Testing
 
@@ -72,18 +67,13 @@ import asyncio
 from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 async def main():
-    # Create mock client
-    client = MockStlConnClient(response_format="langchain")
+    client = MockStlConnClient(response_format="langchain").bind_tools(
+        [{"name": "search"}]
+    )
 
-    # Invoke returns predefined response
-    response = await client.invoke(input_data={"input": "test message"})
-
-    print(response)
-    # LangChainResponse(content="This is a mock response from Stella Connector.")
-
-    # Access invocation history for testing
-    print(client.invocations)
-    # [{"input": "test message"}]
+    response = await client.invoke([{"role": "user", "content": "search headlines"}])
+    print(response.content)
+    print(client.invocations[-1])
 
 asyncio.run(main())
 ```
@@ -125,23 +115,25 @@ StlConnClient(base_url: str, response_format: str = "dict", timeout: float = 10.
 
 #### Methods
 
-##### `invoke(input_data: Dict[str, Any]) -> Union[Dict[str, Any], LangChainResponse]`
+##### `bind_tools(tools: Sequence[Any]) -> StlConnClient`
 
-Invokes the LLM with the provided input data and returns the response in the configured format.
+Registers tool definitions for upcoming requests. Returns `self` so calls can be chained.
+
+##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
+
+Invokes the LLM with LangChain messages or dict payloads and returns the response in the configured format.
 
 **Parameters:**
-- `input_data`: Dictionary containing input parameters
-  - `input`: The text prompt (required)
-  - Additional parameters are passed to the LLM backend
+- `messages`: LangChain message objects, list of role/content dicts, or a pre-built payload dict.
+- `**kwargs`: Reserved for future options; ignored for compatibility with LangChain's signature.
 
 **Returns:**
-- Raw dictionary response (default)
-- `LangChainResponse` object when `response_format="langchain"`
+- Raw dictionary response (default).
+- `LangChainResponse` object when `response_format="langchain"`.
 
 **Raises:**
-- `httpx.TimeoutException`: If request times out
-- `httpx.HTTPStatusError`: For HTTP error responses
-- `ValueError`: For invalid input data
+- `httpx.TimeoutException`: If request times out.
+- `httpx.HTTPStatusError`: For HTTP error responses.
 
 ##### `aclose() -> None`
 
@@ -174,22 +166,19 @@ MockStlConnClient(response_format: str = "dict")
 
 #### Methods
 
-##### `invoke(input_data: Dict[str, Any]) -> Union[Dict[str, Any], LangChainResponse]`
+##### `bind_tools(tools: Sequence[Any]) -> MockStlConnClient`
 
-Returns a mock response and records the invocation. Mirrors the `response_format` behavior of `StlConnClient`.
+Mirrors the real client by storing bound tools and returning `self`.
 
-**Parameters:**
-- `input_data`: Input data (recorded but not processed)
+##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
 
-**Returns:**
-- `{"output": "This is a mock response from Stl-Conn."}` (default)
-- `LangChainResponse(content="This is a mock response from Stl-Conn.")` when `response_format="langchain"`
+Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `StlConnClient`.
 
 #### Properties
 
 ##### `invocations: List[Dict[str, Any]]`
 
-List of all input_data passed to `invoke()` calls. Useful for testing.
+List of serialized payloads passed to `invoke()` calls. Useful for testing.
 
 ### LangChainResponse
 
