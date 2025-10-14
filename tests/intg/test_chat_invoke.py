@@ -69,3 +69,38 @@ async def test_invoke_chat_handles_dict_messages(app: FastAPI, async_client):
         assert received_messages == [{"role": "user", "content": input_message}]
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.mark.asyncio
+async def test_invoke_chat_forwards_extra_options(app: FastAPI, async_client):
+    """Ensure backend-specific options are forwarded untouched."""
+
+    mock_client = MockOllamaClient()
+
+    def get_mock_llm_client():
+        return mock_client
+
+    app.dependency_overrides[get_llm_client] = get_mock_llm_client
+
+    try:
+        payload = {
+            "input_data": {
+                "input": "Hello, settings!",
+                "temperature": 0.3,
+                "max_tokens": 256,
+                "stream": False,
+            }
+        }
+
+        response = await async_client.post("/api/chat/invoke", json=payload)
+
+        assert response.status_code == 200
+        assert len(mock_client.invocations) == 1
+        invocation = mock_client.invocations[0]
+        assert invocation["kwargs"] == {
+            "temperature": 0.3,
+            "max_tokens": 256,
+            "stream": False,
+        }
+    finally:
+        app.dependency_overrides.clear()

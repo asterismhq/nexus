@@ -13,14 +13,14 @@
 ## First Steps When Creating a Real API
 1. Clone or copy the template and run `just setup` to install dependencies.
 2. Configure the desired LLM backend via environment variables or `AppSettings`.
-3. Extend `src/stella_connector/api/router.py` with domain routes using `Depends()` for dependency injection.
+3. Extend `src/stl_conn/api/router.py` with domain routes using `Depends()` for dependency injection.
 4. Register new LLM backends in `dependencies.py` by adding entries to `CLIENT_FACTORIES` and `MOCK_FACTORIES`.
 5. Update `.env.example` and documentation to reflect new environment variables or external services.
 
 ## Key Files
-- `src/stella_connector/dependencies.py`: FastAPI dependency providers using `Depends()` and factory pattern for client selection.
-- `src/stella_connector/api/router.py`: API routes with dependency injection via `Depends()`.
-- `src/stella_connector/api/main.py`: FastAPI app instantiation; attach new routers here.
+- `src/stl_conn/dependencies.py`: FastAPI dependency providers using `Depends()` and factory pattern for client selection.
+- `src/stl_conn/api/router.py`: API routes with dependency injection via `Depends()`.
+- `src/stl_conn/api/main.py`: FastAPI app instantiation; attach new routers here.
 - `tests/unit/test_dependencies.py`: tests for dependency injection system.
 - `tests/intg/test_chat_invoke.py`: integration tests demonstrating `app.dependency_overrides` for mocking.
 - `tests/`: unit/intg/e2e layout kept light so additional checks can drop in without restructuring.
@@ -39,7 +39,7 @@ This project leverages **FastAPI's native dependency injection** for maximum cla
 - **Extensible**: Factory pattern in `dependencies.py` allows easy registration of new LLM backends.
 
 ### Adding New LLM Clients
-1. Implement your client in `src/stella_connector/clients/`.
+1. Implement your client in `src/stl_conn/clients/`.
 2. Add factory functions in `dependencies.py`:
    ```python
    def _create_your_client(settings: AppSettings) -> YourClient:
@@ -60,6 +60,12 @@ def test_with_mock(app: FastAPI, async_client):
     # Make requests using async_client
     app.dependency_overrides.clear()
 ```
+
+## LLM Parameter Forwarding
+
+The `/api/chat/invoke` endpoint now forwards every key under `input_data` except `input` directly to the selected backend client.
+Avoid filtering or renaming these keys in router logic—leave interpretation to the backend implementation. Tests in
+`tests/intg/test_chat_invoke.py` assert this contract, so update them whenever the request schema changes.
 
 ## SDK Usage
 

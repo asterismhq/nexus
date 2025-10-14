@@ -2,7 +2,7 @@
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, Body, Depends, HTTPException
 
 from ..dependencies import get_llm_client
 from ..protocols.llm_client_protocol import LLMClientProtocol
@@ -22,10 +22,17 @@ async def invoke_chat(
     llm_client: LLMClientProtocol = Depends(get_llm_client),
 ) -> Dict[str, Any]:
     """Invoke the configured LLM backend with the provided input."""
-    # Extract messages from input_data - for now, assume input_data has "input_data" key
-    messages = input_data.get("input_data", {}).get("input", "")
+    request_payload = input_data.get("input_data")
+    if not isinstance(request_payload, dict):
+        raise HTTPException(
+            status_code=422,
+            detail="Request body must contain an 'input_data' object.",
+        )
+
+    backend_options = request_payload.copy()
+    messages = backend_options.pop("input", "")
     if isinstance(messages, str):
         messages = [{"role": "user", "content": messages}]
 
-    response = await llm_client.invoke(messages)
+    response = await llm_client.invoke(messages, **backend_options)
     return {"output": response}
