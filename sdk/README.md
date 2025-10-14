@@ -12,6 +12,7 @@ Stella Connector is a FastAPI service that mediates LLM inference across multipl
 - **Async Support**: Full asyncio compatibility for high-performance applications
 - **Type Safety**: Full type hints and protocol-based design
 - **Mock Client**: Built-in mock client for testing and development
+- **Optional LangChain Wrapper**: Toggle between raw dict responses and LangChain-friendly objects
 - **Error Handling**: Comprehensive error handling with detailed responses
 - **Flexible Configuration**: Environment-aware configuration
 
@@ -45,7 +46,7 @@ from stl_conn_sdk.stl_conn_client import StlConnClient
 async def main():
     client = StlConnClient(
         base_url="https://your-stl-conn-instance.com",
-        timeout=30.0  # Custom timeout in seconds
+        response_format="langchain",  # Optional LangChain-compatible response wrapper
     )
 
     response = await client.invoke(input_data={
@@ -54,15 +55,14 @@ async def main():
         "max_tokens": 500
     })
 
-    print(response["output"])
+    print(response.content)
 
 asyncio.run(main())
 ```
 
-The SDK respects the following environment variables:
+The SDK respects the following environment variable:
 
 - `STL_CONN_API_BASE_URL`: Default base URL for clients
-- `STL_CONN_API_TIMEOUT`: Default timeout for requests
 
 ### Mock Client for Testing
 
@@ -72,13 +72,13 @@ from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 async def main():
     # Create mock client
-    client = MockStlConnClient()
+    client = MockStlConnClient(response_format="langchain")
 
     # Invoke returns predefined response
     response = await client.invoke(input_data={"input": "test message"})
 
     print(response)
-    # {"output": "This is a mock response from Stella Connector."}
+    # LangChainResponse(content="This is a mock response from Stella Connector.")
 
     # Access invocation history for testing
     print(client.invocations)
@@ -115,17 +115,17 @@ async def test_my_function():
 #### Constructor
 
 ```python
-StlConnClient(base_url: str, timeout: float = 10.0)
+StlConnClient(base_url: str, response_format: str = "dict")
 ```
 
 - `base_url`: Base URL of the Stella Connector API (e.g., "http://localhost:8000")
-- `timeout`: Request timeout in seconds (default: 10.0)
+- `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`)
 
 #### Methods
 
-##### `invoke(input_data: Dict[str, Any]) -> Dict[str, Any]`
+##### `invoke(input_data: Dict[str, Any]) -> Union[Dict[str, Any], LangChainResponse]`
 
-Invokes the LLM with the provided input data.
+Invokes the LLM with the provided input data and returns the response in the configured format.
 
 **Parameters:**
 - `input_data`: Dictionary containing input parameters
@@ -133,7 +133,8 @@ Invokes the LLM with the provided input data.
   - Additional parameters are passed to the LLM backend
 
 **Returns:**
-- Dictionary with `output` key containing the LLM response
+- Raw dictionary response (default)
+- `LangChainResponse` object when `response_format="langchain"`
 
 **Raises:**
 - `httpx.TimeoutException`: If request times out
@@ -145,23 +146,42 @@ Invokes the LLM with the provided input data.
 #### Constructor
 
 ```python
-MockStlConnClient()
+MockStlConnClient(response_format: str = "dict")
 ```
 
 #### Methods
 
-##### `invoke(input_data: Dict[str, Any]) -> Dict[str, Any]`
+##### `invoke(input_data: Dict[str, Any]) -> Union[Dict[str, Any], LangChainResponse]`
 
-Returns a mock response and records the invocation.
+Returns a mock response and records the invocation. Mirrors the `response_format` behavior of `StlConnClient`.
 
 **Parameters:**
 - `input_data`: Input data (recorded but not processed)
 
 **Returns:**
-- `{"output": "This is a mock response from Stl-Conn."}`
+- `{"output": "This is a mock response from Stl-Conn."}` (default)
+- `LangChainResponse(content="This is a mock response from Stl-Conn.")` when `response_format="langchain"`
 
 #### Properties
 
 ##### `invocations: List[Dict[str, Any]]`
 
 List of all input_data passed to `invoke()` calls. Useful for testing.
+
+### LangChainResponse
+
+The SDK exposes a `LangChainResponse` dataclass when `response_format="langchain"` is selected.
+
+```python
+LangChainResponse(
+    content: Any,
+    tool_calls: List[Any] = [],
+    raw_output: Optional[Any] = None,
+    raw_response: Optional[Dict[str, Any]] = None,
+)
+```
+
+- `content`: The response content extracted from the API payload.
+- `tool_calls`: Optional tool call metadata for LangChain/LangGraph integrations.
+- `raw_output`: The `output` portion of the original API response.
+- `raw_response`: The full API response body for reference/debugging.
