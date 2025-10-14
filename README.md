@@ -41,16 +41,17 @@ just format   # auto-format with black and ruff --fix
 │   └── stella_connector/
 │       ├── api/
 │       │   ├── main.py          # FastAPI app factory and router registration
-│       │   └── router.py        # Health check endpoint
+│       │   └── router.py        # API routes with dependency injection
 │       ├── clients/             # Concrete LLM client implementations
 │       ├── config/              # Pydantic settings modules
-│       ├── container.py         # Dependency injection container
+│       ├── dependencies.py      # FastAPI dependency providers (DI)
 │       └── protocols/           # Shared interface definitions
 ├── tests/
 │   ├── unit/
-│   │   └── test_dependency_container.py
+│   │   └── test_dependencies.py
 │   ├── intg/
-│   │   └── test_health.py
+│   │   ├── test_api.py
+│   │   └── test_chat_invoke.py
 │   └── e2e/
 │       └── api/
 │           └── test_health.py
@@ -84,13 +85,44 @@ Environment variables are loaded from `.env` (managed by `just setup`):
 - `STELLA_CONN_OLLAMA_HOST`, `STELLA_CONN_OLLAMA_PORT`, `STELLA_CONN_OLLAMA_MODEL` – Ollama connection details.
 - `STELLA_CONN_MLX_MODEL` – identifier for the MLX model to load.
 
-## ✅ Health Check
+## 🔌 API Endpoints
 
-The template ships with a single health endpoint:
+The service provides the following endpoints:
 
+### Health Check
 ```http
 GET /health -> {"status": "ok"}
 ```
+
+### Chat Invocation
+```http
+POST /api/chat/invoke
+Content-Type: application/json
+
+{
+  "input_data": {
+    "input": "Your message here"
+  }
+}
+```
+
+## 🏗️ Dependency Injection
+
+This project uses **FastAPI's native dependency injection system** with the `Depends` mechanism:
+
+- **`src/stella_connector/dependencies.py`**: Centralized dependency providers using `Depends()`
+- **Factory Pattern**: Extensible client registration via `CLIENT_FACTORIES` and `MOCK_FACTORIES`
+- **Easy Testing**: Use `app.dependency_overrides` to inject mocks during testing
+
+### Adding a New LLM Backend
+
+1. Create your client in `src/stella_connector/clients/`
+2. Register it in `dependencies.py`:
+   ```python
+   CLIENT_FACTORIES["your_backend"] = lambda settings: YourClient(...)
+   MOCK_FACTORIES["your_backend"] = lambda settings: MockYourClient(...)
+   ```
+3. Routes automatically use the new backend via dependency injection
 
 Use this as a foundation for adding your own routes, dependencies, and persistence layers.
 

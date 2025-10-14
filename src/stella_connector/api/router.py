@@ -2,7 +2,10 @@
 
 from typing import Any, Dict
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Body, Depends
+
+from ..dependencies import get_llm_client
+from ..protocols.llm_client_protocol import LLMClientProtocol
 
 router = APIRouter()
 
@@ -14,11 +17,11 @@ async def health_check() -> dict[str, str]:
 
 
 @router.post("/api/chat/invoke")
-async def invoke_chat(request: Request, input_data: Dict[str, Any]) -> Dict[str, Any]:
+async def invoke_chat(
+    input_data: Dict[str, Any] = Body(...),
+    llm_client: LLMClientProtocol = Depends(get_llm_client),
+) -> Dict[str, Any]:
     """Invoke the configured LLM backend with the provided input."""
-    container = request.app.state.container
-    llm_client = container.provide_llm_client()
-
     # Extract messages from input_data - for now, assume input_data has "input" key
     messages = input_data.get("input", "")
     if isinstance(messages, str):
