@@ -22,6 +22,9 @@ class MLXClient(LLMClientProtocol):
     async def invoke(self, messages: Any, **kwargs: Any) -> Any:
         prompt = self._format_messages(messages)
         generation_kwargs = {**self._settings.to_model_kwargs(), **kwargs}
+        if self._tools:
+            # Note: mlx-lm may not support tools natively, but we include them for consistency
+            generation_kwargs["tools"] = self._tools
         model, tokenizer = self._ensure_model_loaded()
         return await asyncio.to_thread(
             self._generate, model, tokenizer, prompt, generation_kwargs

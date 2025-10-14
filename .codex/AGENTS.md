@@ -28,9 +28,9 @@
 
 This repository provides an SDK (`stella_connector_sdk`) for external repositories to interact with the stella-connector API. The SDK includes:
 
-- `StellaClient`: HTTP client for making requests to the API
-- `MockStellaClient`: Mock client for testing
-- `StellaClientProtocol`: Protocol for type checking
+- `StellaConnectorClient`: HTTP client for making requests to the API
+- `MockStellaConnectorClient`: Mock client for testing
+- `StellaConnectorClientProtocol`: Protocol for type checking
 
 To use the SDK in your project:
 
@@ -38,17 +38,28 @@ To use the SDK in your project:
 2. Import and use the client:
 
 ```python
+import asyncio
 from stella_connector_sdk.stella_connector_client import StellaConnectorClient
 
-client = StellaConnectorClient(base_url="http://localhost:8000")
-response = client.invoke({"input": "Hello"})
+async def main():
+    client = StellaConnectorClient(base_url="http://localhost:8000")
+    response = await client.invoke(input_data={"input": "Hello"})
+    print(response)
+
+asyncio.run(main())
 ```
 
 For testing, use the mock:
 
 ```python
+import asyncio
 from stella_connector_sdk.stella_connector_client import MockStellaConnectorClient
 
-mock_client = MockStellaConnectorClient()
-response = mock_client.invoke({"input": "test"})
+async def main():
+    mock_client = MockStellaConnectorClient()
+    response = await mock_client.invoke(input_data={"input": "test"})
+    print(response)
+    print(mock_client.invocations)
+
+asyncio.run(main())
 ```

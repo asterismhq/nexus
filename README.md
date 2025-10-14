@@ -96,24 +96,4 @@ Use this as a foundation for adding your own routes, dependencies, and persisten
 
 ## SDK
 
-This repository includes an SDK for interacting with the Stella Connector API.
-
-### Installation
-
-To install the SDK, you can add it as a dependency using uv:
-
-```bash
-uv add stella-connector --group sdk
-```
-
-### Usage
-
-```python
-from stella_connector_sdk.stella_connector_client import StellaConnectorClient
-
-client = StellaConnectorClient(base_url="http://localhost:8000")  # Default port for stella-connector
-response = client.invoke(
-    input_data={"input": "Hello, world!"}
-)
-print(response)
-```
+This repository includes a Python SDK for interacting with the Stella Connector API. See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
