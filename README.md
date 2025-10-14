@@ -136,3 +136,13 @@ Use this as a foundation for adding your own routes, dependencies, and persisten
 ## SDK
 
 This repository includes a Python SDK for interacting with the Stella Connector API. See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
+
+### LangChain Support (v1.2.0)
+
+The SDK now acts as a drop-in LangChain client:
+
+- Pass LangChain message objects directly to `StlConnClient.invoke()`—the SDK serializes them for you.
+- Use `bind_tools()` on real or mock clients to chain tool definitions in the LangChain style.
+- Responses created with `response_format="langchain"` continue to return `LangChainResponse` objects.
+
+Applications that previously required bespoke adapters (e.g., `olm-d-rch`) can now rely on the SDK alone.

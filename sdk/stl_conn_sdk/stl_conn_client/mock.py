@@ -24,11 +24,24 @@ class MockStlConnClient:
         self.invocations.append(payload)
         if self.response_format == "langchain":
             mock_json_content = self._build_langchain_content(payload)
+            mock_tool_calls = self._build_mock_tool_calls(payload)
             return LangChainResponse(
                 content=mock_json_content,
-                tool_calls=[],
-                raw_output={"message": {"content": mock_json_content}},
-                raw_response={"output": {"message": {"content": mock_json_content}}},
+                tool_calls=mock_tool_calls,
+                raw_output={
+                    "message": {
+                        "content": mock_json_content,
+                        "tool_calls": mock_tool_calls,
+                    }
+                },
+                raw_response={
+                    "output": {
+                        "message": {
+                            "content": mock_json_content,
+                            "tool_calls": mock_tool_calls,
+                        }
+                    }
+                },
             )
         return {"output": self._MOCK_CONTENT}
 
@@ -79,6 +92,16 @@ class MockStlConnClient:
             else:
                 serialized.append({"role": "user", "content": str(msg)})
         return serialized
+
+    def _build_mock_tool_calls(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+        tools = payload.get("tools", [])
+        if not tools:
+            return []
+        # Return a mock tool call for the first tool
+        first_tool = tools[0]
+        if isinstance(first_tool, dict) and "name" in first_tool:
+            return [{"name": first_tool["name"], "args": {"mock_arg": "mock_value"}}]
+        return [{"name": "mock_tool", "args": {"mock_arg": "mock_value"}}]
 
 
 # For static type checking

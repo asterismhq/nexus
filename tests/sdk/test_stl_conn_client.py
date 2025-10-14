@@ -173,3 +173,15 @@ async def test_mock_client_records_serialized_invocations_with_tools():
 def test_mock_client_rejects_unknown_response_format():
     with pytest.raises(ValueError):
         MockStlConnClient(response_format="unknown")
+
+
+@pytest.mark.asyncio
+async def test_mock_client_langchain_response_with_tools():
+    client = MockStlConnClient(response_format="langchain")
+    client.bind_tools([{"name": "calculator"}])
+    result = await client.invoke([{"role": "user", "content": "test"}])
+
+    assert isinstance(result, LangChainResponse)
+    assert result.tool_calls == [
+        {"name": "calculator", "args": {"mock_arg": "mock_value"}}
+    ]

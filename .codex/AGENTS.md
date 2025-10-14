@@ -69,59 +69,51 @@ Avoid filtering or renaming these keys in router logic—leave interpretation to
 
 ## SDK Usage
 
-This repository provides an SDK (`stl_conn_sdk`) for external repositories to interact with the stella-connector API. The SDK includes:
+The SDK (`stl_conn_sdk`) now ships LangChain-first ergonomics:
 
-- `StlConnClient`: HTTP client for making requests to the API
-- `MockStlConnClient`: Mock client for testing
-- `StlConnClientProtocol`: Protocol for type checking
-- `LangChainResponse`: Structured response wrapper for LangChain compatibility
+- `StlConnClient`: HTTP client that accepts raw LangChain message objects or dict payloads and exposes `bind_tools()` for method chaining.
+- `MockStlConnClient`: Feature-parity mock that records serialized payloads and mirrors `bind_tools()`.
+- `StlConnClientProtocol`: Protocol for type checking.
+- `LangChainResponse`: Structured response wrapper returned when `response_format="langchain"`.
 
-To use the SDK in your project:
-
-1. Install the SDK dependencies: `uv sync --group sdk`
-2. Import and use the client:
+### Quick Examples
 
 ```python
 import asyncio
-from stl_conn_sdk.stl_conn_client import StlConnClient
-
-async def main():
-    client = StlConnClient(base_url="http://localhost:8000")
-    response = await client.invoke(input_data={"input": "Hello"})
-    print(response)
-
-asyncio.run(main())
-```
-
-For LangChain-compatible responses:
-
-```python
-import asyncio
+from langchain_core.messages import HumanMessage
 from stl_conn_sdk.stl_conn_client import StlConnClient
 
 async def main():
     client = StlConnClient(
         base_url="http://localhost:8000",
-        response_format="langchain"  # Returns LangChainResponse objects
+        response_format="langchain",
     )
-    response = await client.invoke(input_data={"input": "Hello"})
-    print(response.content)  # Access structured content
-    print(response.tool_calls)  # Access tool calls
+
+    # Messages can be LangChain objects; the client serializes them internally.
+    result = await client.invoke([HumanMessage(content="Hello there!")])
+    print(result.content)
+
+    # Bind LangChain tools without extra wrappers.
+    tool_enabled = client.bind_tools([{"name": "calculator"}])
+    follow_up = await tool_enabled.invoke([{"role": "user", "content": "add 2 and 2"}])
+    print(tool_enabled is client)  # bind_tools returns self
 
 asyncio.run(main())
 ```
-
-For testing, use the mock:
 
 ```python
 import asyncio
 from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 async def main():
-    mock_client = MockStlConnClient()
-    response = await mock_client.invoke(input_data={"input": "test"})
-    print(response)
-    print(mock_client.invocations)
+    mock_client = MockStlConnClient(response_format="langchain").bind_tools(
+        [{"name": "search"}]
+    )
+    response = await mock_client.invoke([{"role": "user", "content": "search"}])
+    print(mock_client.invocations[-1])  # Serialized payload incl. tools
+    print(response.content)             # Deterministic mock JSON
 
 asyncio.run(main())
 ```
+
+Tests under `tests/sdk/` cover serialization, tool binding, and LangChain response normalization—extend these when evolving the request contract.
