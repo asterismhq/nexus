@@ -109,7 +109,7 @@ uv add stella-connector --group sdk
 ### Usage
 
 ```python
-from stella_connector_sdk.stella_client import StellaConnectorClient
+from stella_connector_sdk.stella_connector_client import StellaConnectorClient
 
 client = StellaConnectorClient(base_url="http://localhost:8000")  # Default port for stella-connector
 response = client.invoke(

@@ -38,7 +38,7 @@ To use the SDK in your project:
 2. Import and use the client:
 
 ```python
-from stella_connector_sdk.stella_client import StellaConnectorClient
+from stella_connector_sdk.stella_connector_client import StellaConnectorClient
 
 client = StellaConnectorClient(base_url="http://localhost:8000")
 response = client.invoke({"input": "Hello"})
@@ -47,7 +47,7 @@ response = client.invoke({"input": "Hello"})
 For testing, use the mock:
 
 ```python
-from stella_connector_sdk.stella_client import MockStellaConnectorClient
+from stella_connector_sdk.stella_connector_client import MockStellaConnectorClient
 
 mock_client = MockStellaConnectorClient()
 response = mock_client.invoke({"input": "test"})

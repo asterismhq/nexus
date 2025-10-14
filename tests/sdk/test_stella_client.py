@@ -1,6 +1,6 @@
 from unittest.mock import Mock, patch
 
-from stella_connector_sdk.stella_client import StellaConnectorClient
+from stella_connector_sdk.stella_connector_client import StellaConnectorClient
 
 
 def test_stella_client_invoke():

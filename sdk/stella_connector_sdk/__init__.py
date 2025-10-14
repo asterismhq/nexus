@@ -1,4 +1,4 @@
-from .stella_client import (
+from .stella_connector_client import (
     MockStellaConnectorClient,
     StellaConnectorClient,
     StellaConnectorClientProtocol,
