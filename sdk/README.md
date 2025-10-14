@@ -47,6 +47,7 @@ async def main():
     client = StlConnClient(
         base_url="https://your-stl-conn-instance.com",
         response_format="langchain",  # Optional LangChain-compatible response wrapper
+        timeout=30.0,  # Optional timeout in seconds
     )
 
     response = await client.invoke(input_data={
@@ -115,11 +116,12 @@ async def test_my_function():
 #### Constructor
 
 ```python
-StlConnClient(base_url: str, response_format: str = "dict")
+StlConnClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 ```
 
 - `base_url`: Base URL of the Stella Connector API (e.g., "http://localhost:8000")
 - `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`)
+- `timeout`: Request timeout in seconds (default: 10.0)
 
 #### Methods
 
@@ -140,6 +142,27 @@ Invokes the LLM with the provided input data and returns the response in the con
 - `httpx.TimeoutException`: If request times out
 - `httpx.HTTPStatusError`: For HTTP error responses
 - `ValueError`: For invalid input data
+
+##### `aclose() -> None`
+
+Closes the underlying HTTP client connection pool. Should be called when the client is no longer needed to free up resources.
+
+**Usage with context manager:**
+
+```python
+async with StlConnClient(base_url="http://localhost:8000") as client:
+    response = await client.invoke({"input": "Hello"})
+```
+
+**Manual cleanup:**
+
+```python
+client = StlConnClient(base_url="http://localhost:8000")
+try:
+    response = await client.invoke({"input": "Hello"})
+finally:
+    await client.aclose()
+```
 
 ### MockStlConnClient
 

@@ -7,30 +7,37 @@ import httpx
 from .protocol import StlConnClientProtocol
 from .response import LangChainResponse
 
+_DEFAULT_RESPONSE_FORMAT: Final[str] = "dict"
+_SUPPORTED_RESPONSE_FORMATS: Final[frozenset[str]] = frozenset({"dict", "langchain"})
+
+
+def _validate_response_format(response_format: str) -> str:
+    if response_format not in _SUPPORTED_RESPONSE_FORMATS:
+        supported = ", ".join(sorted(_SUPPORTED_RESPONSE_FORMATS))
+        raise ValueError(
+            f"Unsupported response_format '{response_format}'. Supported formats: {supported}."
+        )
+    return response_format
+
 
 class StlConnClient:
-    _DEFAULT_FORMAT: Final[str] = "dict"
-    _SUPPORTED_FORMATS: Final[frozenset[str]] = frozenset({"dict", "langchain"})
-
-    def __init__(self, base_url: str, response_format: str = _DEFAULT_FORMAT):
+    def __init__(
+        self,
+        base_url: str,
+        response_format: str = _DEFAULT_RESPONSE_FORMAT,
+        timeout: float = 10.0,
+    ):
         self.base_url = base_url
-        self.response_format = self._validate_response_format(response_format)
+        self.response_format = _validate_response_format(response_format)
+        self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout)
 
     async def invoke(self, input_data: Dict[str, Any]) -> Any:
-        async with httpx.AsyncClient() as client:
-            url = f"{self.base_url}/api/chat/invoke"
-            response = await client.post(url, json={"input_data": input_data})
-            response.raise_for_status()
-            result = response.json()
+        response = await self._client.post(
+            "/api/chat/invoke", json={"input_data": input_data}
+        )
+        response.raise_for_status()
+        result = response.json()
         return self._format_response(result)
-
-    def _validate_response_format(self, response_format: str) -> str:
-        if response_format not in self._SUPPORTED_FORMATS:
-            supported = ", ".join(sorted(self._SUPPORTED_FORMATS))
-            raise ValueError(
-                f"Unsupported response_format '{response_format}'. Supported formats: {supported}."
-            )
-        return response_format
 
     def _format_response(self, result: Dict[str, Any]) -> Any:
         if self.response_format == "langchain":
@@ -70,6 +77,16 @@ class StlConnClient:
             raw_output=output,
             raw_response=result,
         )
+
+    async def aclose(self) -> None:
+        """Close the underlying HTTP client."""
+        await self._client.aclose()
+
+    async def __aenter__(self) -> "StlConnClient":
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self.aclose()
 
 
 # For static type checking
