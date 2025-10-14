@@ -2,10 +2,10 @@ from typing import Any, Dict
 
 import httpx
 
-from .protocol import StellaConnectorClientProtocol
+from .protocol import StlConnClientProtocol
 
 
-class StellaConnectorClient:
+class StlConnClient:
     def __init__(self, base_url: str):
         self.base_url = base_url
 
@@ -18,4 +18,4 @@ class StellaConnectorClient:
 
 
 # For static type checking
-_: StellaConnectorClientProtocol = StellaConnectorClient(base_url="")
+_: StlConnClientProtocol = StlConnClient(base_url="")

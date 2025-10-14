@@ -1,4 +1,4 @@
-"""Client implementations for the stella-connector service."""
+"""Client implementations for the stl-conn service."""
 
 from .mlx_client import MLXClient
 from .ollama_client import OllamaClient

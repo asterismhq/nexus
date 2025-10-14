@@ -1,4 +1,4 @@
-# stella-connector Agent Notes
+# Stella Connector Agent Notes
 
 ## Overview
 - Minimal FastAPI template intended as a clean starting point for new services.
@@ -63,7 +63,7 @@ def test_with_mock(app: FastAPI, async_client):
 
 ## SDK Usage
 
-This repository provides an SDK (`stella_connector_sdk`) for external repositories to interact with the stella-connector API. The SDK includes:
+This repository provides an SDK (`stl_conn_sdk`) for external repositories to interact with the stella-connector API. The SDK includes:
 
 - `StellaConnectorClient`: HTTP client for making requests to the API
 - `MockStellaConnectorClient`: Mock client for testing

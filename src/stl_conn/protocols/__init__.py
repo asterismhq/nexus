@@ -1,4 +1,4 @@
-"""Protocol definitions for stella-connector."""
+"""Protocol definitions for stl-conn."""
 
 from .llm_client_protocol import LLMClientProtocol
 

@@ -1,12 +1,12 @@
 # ==============================================================================
-# justfile for stella-connector automation
+# justfile for stl-conn automation
 # ==============================================================================
 
 set dotenv-load
 
-APP_NAME := env("STELLA_CONN_APP_NAME", "stella-connector")
-HOST_IP := env("STELLA_CONN_BIND_IP", "127.0.0.1")
-DEV_PORT := env("STELLA_CONN_DEV_PORT", "8000")
+APP_NAME := env("STL_CONN_APP_NAME", "stl-conn")
+HOST_IP := env("STL_CONN_BIND_IP", "127.0.0.1")
+DEV_PORT := env("STL_CONN_DEV_PORT", "8000")
 
 # default target
 default: help
@@ -41,7 +41,7 @@ setup:
 # Run local development server
 dev:
     @echo "Starting local development server..."
-    @uv run uvicorn stella_connector.api.main:app --reload --host {{HOST_IP}} --port {{DEV_PORT}}
+    @uv run uvicorn stl_conn.api.main:app --reload --host {{HOST_IP}} --port {{DEV_PORT}}
 
 # Start production-like environment with Docker Compose
 up:
