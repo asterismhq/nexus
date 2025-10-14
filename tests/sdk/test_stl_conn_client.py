@@ -61,7 +61,7 @@ def test_stl_conn_client_rejects_unknown_response_format():
 
 def test_stl_conn_client_timeout_parameter():
     with patch("httpx.AsyncClient") as mock_client_class:
-        client = StlConnClient(base_url="http://example.com", timeout=30.0)
+        StlConnClient(base_url="http://example.com", timeout=30.0)
         mock_client_class.assert_called_once_with(
             base_url="http://example.com", timeout=30.0
         )

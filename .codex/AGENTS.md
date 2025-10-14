@@ -71,9 +71,10 @@ Avoid filtering or renaming these keys in router logic—leave interpretation to
 
 This repository provides an SDK (`stl_conn_sdk`) for external repositories to interact with the stella-connector API. The SDK includes:
 
-- `StellaConnectorClient`: HTTP client for making requests to the API
-- `MockStellaConnectorClient`: Mock client for testing
-- `StellaConnectorClientProtocol`: Protocol for type checking
+- `StlConnClient`: HTTP client for making requests to the API
+- `MockStlConnClient`: Mock client for testing
+- `StlConnClientProtocol`: Protocol for type checking
+- `LangChainResponse`: Structured response wrapper for LangChain compatibility
 
 To use the SDK in your project:
 
@@ -82,12 +83,30 @@ To use the SDK in your project:
 
 ```python
 import asyncio
-from stella_connector_sdk.stella_connector_client import StellaConnectorClient
+from stl_conn_sdk.stl_conn_client import StlConnClient
 
 async def main():
-    client = StellaConnectorClient(base_url="http://localhost:8000")
+    client = StlConnClient(base_url="http://localhost:8000")
     response = await client.invoke(input_data={"input": "Hello"})
     print(response)
+
+asyncio.run(main())
+```
+
+For LangChain-compatible responses:
+
+```python
+import asyncio
+from stl_conn_sdk.stl_conn_client import StlConnClient
+
+async def main():
+    client = StlConnClient(
+        base_url="http://localhost:8000",
+        response_format="langchain"  # Returns LangChainResponse objects
+    )
+    response = await client.invoke(input_data={"input": "Hello"})
+    print(response.content)  # Access structured content
+    print(response.tool_calls)  # Access tool calls
 
 asyncio.run(main())
 ```
@@ -96,10 +115,10 @@ For testing, use the mock:
 
 ```python
 import asyncio
-from stella_connector_sdk.stella_connector_client import MockStellaConnectorClient
+from stl_conn_sdk.stl_conn_client import MockStlConnClient
 
 async def main():
-    mock_client = MockStellaConnectorClient()
+    mock_client = MockStlConnClient()
     response = await mock_client.invoke(input_data={"input": "test"})
     print(response)
     print(mock_client.invocations)
