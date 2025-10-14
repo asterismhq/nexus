@@ -11,7 +11,7 @@ class StellaConnectorClient:
 
     async def invoke(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
-            url = f"{self.base_url}/api/v1/chat/invoke"
+            url = f"{self.base_url}/api/chat/invoke"
             response = await client.post(url, json=input_data)
             response.raise_for_status()
             return response.json()

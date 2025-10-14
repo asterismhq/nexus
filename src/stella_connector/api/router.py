@@ -13,7 +13,7 @@ async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.post("/api/v1/chat/invoke")
+@router.post("/api/chat/invoke")
 async def invoke_chat(request: Request, input_data: Dict[str, Any]) -> Dict[str, Any]:
     """Invoke the configured LLM backend with the provided input."""
     container = request.app.state.container

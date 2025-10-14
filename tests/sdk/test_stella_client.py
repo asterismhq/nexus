@@ -16,6 +16,6 @@ async def test_stella_client_invoke():
         mock_client_class.return_value.__aenter__.return_value = mock_client_instance
         result = await client.invoke({"input": "test"})
         mock_client_instance.post.assert_called_once_with(
-            "http://example.com/api/v1/chat/invoke", json={"input": "test"}
+            "http://example.com/api/chat/invoke", json={"input": "test"}
         )
         assert result == {"result": "test"}
