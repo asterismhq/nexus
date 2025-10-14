@@ -1,4 +1,4 @@
-"""HTTP routes exposed by the FastAPI template."""
+"""HTTP routes exposed by the stella-connector service."""
 
 from fastapi import APIRouter
 

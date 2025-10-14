@@ -10,7 +10,7 @@ from collections.abc import AsyncGenerator, Generator
 import httpx
 import pytest
 
-PROJECT_NAME = os.getenv("FAPI_TMPL_E2E_PROJECT", "fapi-tmpl-e2e")
+PROJECT_NAME = os.getenv("FAPI_TMPL_E2E_PROJECT", "stella-connector-e2e")
 COMPOSE_FILE = os.getenv("FAPI_TMPL_E2E_COMPOSE_FILE", "docker-compose.yml")
 HOST_IP = os.getenv("FAPI_TMPL_E2E_HOST", "127.0.0.1")
 HOST_PORT = os.getenv("FAPI_TMPL_E2E_PORT", "8100")

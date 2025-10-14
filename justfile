@@ -1,10 +1,10 @@
 # ==============================================================================
-# justfile for fapi-tmpl automation
+# justfile for stella-connector automation
 # ==============================================================================
 
 set dotenv-load
 
-APP_NAME := env("FAPI_TMPL_APP_NAME", "fapi-tmpl")
+APP_NAME := env("FAPI_TMPL_APP_NAME", "stella-connector")
 HOST_IP := env("FAPI_TMPL_BIND_IP", "127.0.0.1")
 DEV_PORT := env("FAPI_TMPL_DEV_PORT", "8000")
 
@@ -41,7 +41,7 @@ setup:
 # Run local development server
 dev:
     @echo "Starting local development server..."
-    @uv run uvicorn fapi_tmpl.api.main:app --reload --host {{HOST_IP}} --port {{DEV_PORT}}
+    @uv run uvicorn stella_connector.api.main:app --reload --host {{HOST_IP}} --port {{DEV_PORT}}
 
 # Start production-like environment with Docker Compose
 up:
