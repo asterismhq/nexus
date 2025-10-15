@@ -29,3 +29,18 @@ class MockResponseStrategy(ABC):
         """Generate a mock response for the given payload."""
 
         raise NotImplementedError
+
+
+def coerce_to_mock_response(value: Any) -> MockResponse:
+    """Coerce a value into a MockResponse, handling various input types."""
+    if isinstance(value, MockResponse):
+        return value.copy()
+    if isinstance(value, dict):
+        content = value.get("content")
+        if content is None:
+            raise ValueError("response dict must include 'content'")
+        tool_calls = value.get("tool_calls", [])
+        if not isinstance(tool_calls, list):
+            tool_calls = list(tool_calls)
+        return MockResponse(content=content, tool_calls=tool_calls)
+    return MockResponse(content=value)

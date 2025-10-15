@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, Mapping, Pattern
 
-from .base import MockResponse, MockResponseStrategy
+from .base import MockResponse, MockResponseStrategy, coerce_to_mock_response
 
 
 class PatternMatchingStrategy(MockResponseStrategy):
@@ -26,9 +26,9 @@ class PatternMatchingStrategy(MockResponseStrategy):
         if match is None:
             if self._default is None:
                 raise RuntimeError("no pattern matched the payload")
-            return self._coerce(self._default)
+            return coerce_to_mock_response(self._default)
         _, response = match
-        return self._coerce(response)
+        return coerce_to_mock_response(response)
 
     def _find_match(self, payload: Dict[str, Any]) -> tuple[Pattern[str], Any] | None:
         message_str = self._extract_message_text(payload)
@@ -54,16 +54,3 @@ class PatternMatchingStrategy(MockResponseStrategy):
         if raw_input is None:
             return ""
         return str(raw_input)
-
-    def _coerce(self, response: Any) -> MockResponse:
-        if isinstance(response, MockResponse):
-            return response.copy()
-        if isinstance(response, dict):
-            content = response.get("content")
-            if content is None:
-                raise ValueError("pattern response dict must include 'content'")
-            tool_calls = response.get("tool_calls", [])
-            if not isinstance(tool_calls, list):
-                tool_calls = list(tool_calls)
-            return MockResponse(content=content, tool_calls=tool_calls)
-        return MockResponse(content=response)

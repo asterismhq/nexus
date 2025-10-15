@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-from .base import MockResponse, MockResponseStrategy
+from .base import MockResponse, MockResponseStrategy, coerce_to_mock_response
 
 
 class SequenceResponseStrategy(MockResponseStrategy):
@@ -11,7 +11,7 @@ class SequenceResponseStrategy(MockResponseStrategy):
     def __init__(self, responses: Sequence[Any], repeat_last: bool = False) -> None:
         if not responses:
             raise ValueError("responses must not be empty")
-        self._responses = [self._coerce(response) for response in responses]
+        self._responses = [coerce_to_mock_response(response) for response in responses]
         self._repeat_last = repeat_last
         self._index = 0
 
@@ -28,16 +28,3 @@ class SequenceResponseStrategy(MockResponseStrategy):
         """Reset the sequence pointer back to the beginning."""
 
         self._index = 0
-
-    def _coerce(self, value: Any) -> MockResponse:
-        if isinstance(value, MockResponse):
-            return value.copy()
-        if isinstance(value, dict):
-            content = value.get("content")
-            if content is None:
-                raise ValueError("sequence response dict must include 'content'")
-            tool_calls = value.get("tool_calls", [])
-            if not isinstance(tool_calls, list):
-                tool_calls = list(tool_calls)
-            return MockResponse(content=content, tool_calls=tool_calls)
-        return MockResponse(content=value)
