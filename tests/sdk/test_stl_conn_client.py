@@ -5,6 +5,7 @@ import pytest
 from stl_conn_sdk.stl_conn_client import (
     LangChainResponse,
     MockStlConnClient,
+    SimpleResponseStrategy,
     StlConnClient,
 )
 
@@ -151,7 +152,7 @@ async def test_mock_client_langchain_response():
     result = await client.invoke([{"role": "user", "content": "test"}])
 
     assert isinstance(result, LangChainResponse)
-    assert result.content == '{"query": "test query", "rationale": "test rationale"}'
+    assert result.content == "This is a mock response from Stl-Conn."
     assert result.tool_calls == []
 
 
@@ -177,11 +178,15 @@ def test_mock_client_rejects_unknown_response_format():
 
 @pytest.mark.asyncio
 async def test_mock_client_langchain_response_with_tools():
-    client = MockStlConnClient(response_format="langchain")
+    strategy = SimpleResponseStrategy(
+        content={"result": "ok"},
+        tool_calls=[{"name": "calculator", "args": {"total": 42}}],
+    )
+    client = MockStlConnClient(response_format="langchain", strategy=strategy)
     client.bind_tools([{"name": "calculator"}])
     result = await client.invoke([{"role": "user", "content": "test"}])
 
     assert isinstance(result, LangChainResponse)
-    assert result.tool_calls == [
-        {"name": "calculator", "args": {"mock_arg": "mock_value"}}
-    ]
+    assert result.content == {"result": "ok"}
+    assert result.tool_calls == [{"name": "calculator", "args": {"total": 42}}]
+    assert client.invocations[-1]["tools"] == [{"name": "calculator"}]

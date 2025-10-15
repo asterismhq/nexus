@@ -75,6 +75,7 @@ The SDK (`stl_conn_sdk`) now ships LangChain-first ergonomics:
 - `MockStlConnClient`: Feature-parity mock that records serialized payloads and mirrors `bind_tools()`.
 - `StlConnClientProtocol`: Protocol for type checking.
 - `LangChainResponse`: Structured response wrapper returned when `response_format="langchain"`.
+- Strategy helpers (`SimpleResponseStrategy`, `SequenceResponseStrategy`, `PatternMatchingStrategy`, `CallbackResponseStrategy`, `LegacyKeywordStrategy`) let tests configure mock behaviour without editing shared code.
 
 ### Quick Examples
 

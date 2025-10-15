@@ -1,11 +1,25 @@
 from .stl_conn_client import (
+    CallbackResponseStrategy,
+    LangChainResponse,
+    MockResponse,
+    MockResponseStrategy,
     MockStlConnClient,
+    PatternMatchingStrategy,
+    SequenceResponseStrategy,
+    SimpleResponseStrategy,
     StlConnClient,
     StlConnClientProtocol,
 )
 
 __all__ = [
-    "StlConnClient",
+    "CallbackResponseStrategy",
+    "LangChainResponse",
+    "MockResponse",
+    "MockResponseStrategy",
     "MockStlConnClient",
+    "PatternMatchingStrategy",
+    "SequenceResponseStrategy",
+    "SimpleResponseStrategy",
+    "StlConnClient",
     "StlConnClientProtocol",
 ]
