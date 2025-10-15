@@ -78,6 +78,41 @@ async def main():
 asyncio.run(main())
 ```
 
+#### Strategy-Based Responses
+
+The mock client now accepts pluggable strategies so tests can precisely control the simulated output:
+
+```python
+from stl_conn_sdk.stl_conn_client import (
+    MockStlConnClient,
+    SequenceResponseStrategy,
+    SimpleResponseStrategy,
+)
+
+# Default behaviour mirrors a simple textual response
+mock_client = MockStlConnClient()
+
+# Fixed JSON payload with bespoke tool call metadata
+mock_client.set_strategy(
+    SimpleResponseStrategy(
+        content={"summary": "precomputed"},
+        tool_calls=[{"name": "summarizer", "args": {}}],
+    )
+)
+
+# Multi-turn sequence for more complex workflows
+mock_client.bind_tools([{"name": "search"}])
+mock_client.set_strategy(
+    SequenceResponseStrategy([
+        {"content": {"query": "first"}},
+        {"content": {"query": "refine"}},
+        {"content": {"summary": "done"}},
+    ])
+)
+```
+
+Additional built-ins include `PatternMatchingStrategy` and `CallbackResponseStrategy`.
+
 #### Testing Example
 
 ```python
@@ -161,7 +196,10 @@ finally:
 #### Constructor
 
 ```python
-MockStlConnClient(response_format: str = "dict")
+MockStlConnClient(
+    response_format: str = "dict",
+    strategy: MockResponseStrategy | None = None,
+)
 ```
 
 #### Methods
@@ -172,7 +210,7 @@ Mirrors the real client by storing bound tools and returning `self`.
 
 ##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
 
-Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `StlConnClient`.
+Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `StlConnClient`. The response is controlled by the configured strategy (defaults to `SimpleResponseStrategy`).
 
 #### Properties
 

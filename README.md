@@ -146,3 +146,14 @@ The SDK now acts as a drop-in LangChain client:
 - Responses created with `response_format="langchain"` continue to return `LangChainResponse` objects.
 
 Applications that previously required bespoke adapters (e.g., `olm-d-rch`) can now rely on the SDK alone.
+
+### Mock Client Strategies (v1.3.0)
+
+`MockStlConnClient` now supports pluggable response strategies so tests can declare exactly how the mock behaves without editing shared infrastructure. Built-in options include:
+
+- `SimpleResponseStrategy` for fixed responses (optionally with predefined tool calls).
+- `SequenceResponseStrategy` for multi-turn workflows.
+- `PatternMatchingStrategy` for regex-triggered responses with optional fallbacks.
+- `CallbackResponseStrategy` when you need imperative control over mock content.
+
+Strategies can be provided when constructing the mock or swapped later via `set_strategy()` / `use_legacy_keyword_strategy()`. See `sdk/README.md` for usage examples.

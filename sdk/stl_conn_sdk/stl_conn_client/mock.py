@@ -5,57 +5,84 @@ from typing import Any, Dict, List, Sequence
 from .client import _validate_response_format
 from .protocol import StlConnClientProtocol
 from .response import LangChainResponse
+from .strategies import (
+    MockResponse,
+    MockResponseStrategy,
+    SimpleResponseStrategy,
+)
 
 
 class MockStlConnClient:
     _MOCK_CONTENT = "This is a mock response from Stl-Conn."
 
-    def __init__(self, response_format: str = "dict"):
+    def __init__(
+        self,
+        response_format: str = "dict",
+        strategy: MockResponseStrategy | None = None,
+    ) -> None:
         self.response_format = _validate_response_format(response_format)
         self.invocations: List[Dict[str, Any]] = []
         self._tools: List[Any] | None = None
+        self._strategy: MockResponseStrategy = strategy or SimpleResponseStrategy(
+            self._MOCK_CONTENT
+        )
 
     def bind_tools(self, tools: Sequence[Any]) -> "MockStlConnClient":
         self._tools = list(tools)
         return self
 
+    def set_strategy(self, strategy: MockResponseStrategy) -> "MockStlConnClient":
+        """Configure the strategy used to build mock responses."""
+
+        self._strategy = strategy
+        return self
+
+    @property
+    def strategy(self) -> MockResponseStrategy:
+        return self._strategy
+
     async def invoke(self, input_data: Any, **_: Any) -> Any:
         payload = self._prepare_payload(input_data)
         self.invocations.append(payload)
+        response = self._resolve_response(payload)
         if self.response_format == "langchain":
-            mock_json_content = self._build_langchain_content(payload)
-            mock_tool_calls = self._build_mock_tool_calls(payload)
-            return LangChainResponse(
-                content=mock_json_content,
-                tool_calls=mock_tool_calls,
-                raw_output={
-                    "message": {
-                        "content": mock_json_content,
-                        "tool_calls": mock_tool_calls,
-                    }
-                },
-                raw_response={
-                    "output": {
-                        "message": {
-                            "content": mock_json_content,
-                            "tool_calls": mock_tool_calls,
-                        }
-                    }
-                },
-            )
-        return {"output": self._MOCK_CONTENT}
+            return self._build_langchain_response(response)
+        return self._build_dict_response(response)
 
-    def _build_langchain_content(self, payload: Dict[str, Any]) -> str:
-        messages = payload.get("input")
-        message_str = str(messages).lower()
+    def _resolve_response(self, payload: Dict[str, Any]) -> MockResponse:
+        strategy = self._strategy
+        if not strategy.should_handle(payload):
+            raise RuntimeError("Configured mock strategy cannot handle the payload")
+        raw_response = strategy.generate(payload)
+        return self._ensure_mock_response(raw_response)
 
-        if "query" in message_str or "search" in message_str:
-            return '{"query": "mock search query for testing", "rationale": "This is a mock query"}'
-        if "reflect" in message_str or "evaluation" in message_str:
-            return '{"reflection": "This is a mock reflection.", "evaluation": "continue", "rationale": "Mock evaluation for testing"}'
-        if "summary" in message_str or "summarize" in message_str:
-            return '{"summary": "This is a mock summary of the research. The mock client has generated this response for testing purposes."}'
-        return '{"query": "test query", "rationale": "test rationale"}'
+    def _ensure_mock_response(self, value: Any) -> MockResponse:
+        if isinstance(value, MockResponse):
+            return value.copy()
+        if isinstance(value, dict) and "content" in value:
+            tool_calls = value.get("tool_calls", [])
+            if not isinstance(tool_calls, list):
+                tool_calls = list(tool_calls)
+            return MockResponse(content=value["content"], tool_calls=tool_calls)
+        return MockResponse(content=value)
+
+    def _build_langchain_response(self, response: MockResponse) -> LangChainResponse:
+        message_payload = {
+            "content": response.content,
+            "tool_calls": list(response.tool_calls),
+        }
+        return LangChainResponse(
+            content=response.content,
+            tool_calls=list(response.tool_calls),
+            raw_output={"message": message_payload},
+            raw_response={"output": {"message": message_payload}},
+        )
+
+    def _build_dict_response(self, response: MockResponse) -> Dict[str, Any]:
+        result: Dict[str, Any] = {"output": response.content}
+        if response.tool_calls:
+            result["tool_calls"] = list(response.tool_calls)
+        return result
 
     def _prepare_payload(self, input_data: Any) -> Dict[str, Any]:
         if isinstance(input_data, dict):
@@ -92,16 +119,6 @@ class MockStlConnClient:
             else:
                 serialized.append({"role": "user", "content": str(msg)})
         return serialized
-
-    def _build_mock_tool_calls(self, payload: Dict[str, Any]) -> List[Dict[str, Any]]:
-        tools = payload.get("tools", [])
-        if not tools:
-            return []
-        # Return a mock tool call for the first tool
-        first_tool = tools[0]
-        if isinstance(first_tool, dict) and "name" in first_tool:
-            return [{"name": first_tool["name"], "args": {"mock_arg": "mock_value"}}]
-        return [{"name": "mock_tool", "args": {"mock_arg": "mock_value"}}]
 
 
 # For static type checking
