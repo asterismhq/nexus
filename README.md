@@ -82,7 +82,7 @@ Environment variables are loaded from `.env` (managed by `just setup`):
 - `NEXUS_DEV_PORT` – port used by `just dev` (default `8000`).
 - `NEXUS_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
 - `NEXUS_USE_MOCK_OLLAMA` / `NEXUS_USE_MOCK_MLX` – toggle mock clients for tests.
-- `NEXUS_OLLAMA_HOST`, `NEXUS_OLLAMA_PORT`, `NEXUS_OLLAMA_MODEL` – Ollama connection details.
+- `NEXUS_OLLAMA_HOST`, `NEXUS_OLLAMA_MODEL` – Ollama connection details.
 - `NEXUS_MLX_MODEL` – identifier for the MLX model to load.
 
 ## 🔌 API Endpoints

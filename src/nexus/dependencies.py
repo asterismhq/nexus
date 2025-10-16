@@ -11,33 +11,33 @@ from fastapi import Depends
 
 from .clients.mlx_client import MLXClient
 from .clients.ollama_client import OllamaClient
-from .config import AppSettings, MLXSettings, OllamaSettings
+from .config import MLXSettings, NexusSettings, OllamaSettings
 from .protocols.llm_client_protocol import LLMClientProtocol
 
 LOGGER = logging.getLogger(__name__)
 
 # Factory type definitions
-ClientFactory = Callable[[AppSettings], LLMClientProtocol]
-MockFactory = Callable[[AppSettings], LLMClientProtocol]
+ClientFactory = Callable[[NexusSettings], LLMClientProtocol]
+MockFactory = Callable[[NexusSettings], LLMClientProtocol]
 
 
-def _create_ollama_client(_settings: AppSettings) -> OllamaClient:
+def _create_ollama_client(_settings: NexusSettings) -> OllamaClient:
     """Create an Ollama client instance."""
     return OllamaClient(OllamaSettings())
 
 
-def _create_mlx_client(_settings: AppSettings) -> MLXClient:
+def _create_mlx_client(_settings: NexusSettings) -> MLXClient:
     """Create an MLX client instance."""
     return MLXClient(MLXSettings())
 
 
-def _create_mock_ollama_client(_settings: AppSettings) -> LLMClientProtocol:
+def _create_mock_ollama_client(_settings: NexusSettings) -> LLMClientProtocol:
     """Create a mock Ollama client instance."""
     mock_class = _import_mock_class("dev.mocks.mock_ollama_client.MockOllamaClient")
     return mock_class(OllamaSettings())
 
 
-def _create_mock_mlx_client(_settings: AppSettings) -> LLMClientProtocol:
+def _create_mock_mlx_client(_settings: NexusSettings) -> LLMClientProtocol:
     """Create a mock MLX client instance."""
     mock_class = _import_mock_class("dev.mocks.mock_mlx_client.MockMLXClient")
     return mock_class(MLXSettings())
@@ -64,16 +64,16 @@ MOCK_FACTORIES: dict[str, MockFactory] = {
 
 
 @lru_cache()
-def get_app_settings() -> AppSettings:
-    """Return singleton AppSettings instance.
+def get_app_settings() -> NexusSettings:
+    """Return singleton NexusSettings instance.
 
     Cached to ensure settings are loaded only once per application lifecycle.
     """
-    return AppSettings()
+    return NexusSettings()
 
 
 def get_llm_client(
-    settings: AppSettings = Depends(get_app_settings),
+    settings: NexusSettings = Depends(get_app_settings),
 ) -> LLMClientProtocol:
     """Provide the appropriate LLM client based on application settings.
 

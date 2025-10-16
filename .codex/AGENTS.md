@@ -7,12 +7,12 @@
 ## Design Philosophy
 - Stay database-agnostic; add persistence only when the target project needs it.
 - Use FastAPI's native dependency injection via `Depends()` for clean, testable code.
-- Keep settings and dependencies explicit via `AppSettings`, `OllamaSettings`, `MLXSettings`, and factory pattern in `dependencies.py`.
+- Keep settings and dependencies explicit via `NexusSettings`, `OllamaSettings`, `MLXSettings`, and factory pattern in `dependencies.py`.
 - Maintain parity between local, Docker, and CI flows with a single source of truth (`just`, `uv`, `.env`).
 
 ## First Steps When Creating a Real API
 1. Clone or copy the template and run `just setup` to install dependencies.
-2. Configure the desired LLM backend via environment variables or `AppSettings`.
+2. Configure the desired LLM backend via environment variables or `NexusSettings`.
 3. Extend `src/nexus/api/router.py` with domain routes using `Depends()` for dependency injection.
 4. Register new LLM backends in `dependencies.py` by adding entries to `CLIENT_FACTORIES` and `MOCK_FACTORIES`.
 5. Update `.env.example` and documentation to reflect new environment variables or external services.
@@ -42,7 +42,7 @@ This project leverages **FastAPI's native dependency injection** for maximum cla
 1. Implement your client in `src/nexus/clients/`.
 2. Add factory functions in `dependencies.py`:
    ```python
-   def _create_your_client(settings: AppSettings) -> YourClient:
+   def _create_your_client(settings: NexusSettings) -> YourClient:
        return YourClient(YourSettings())
 
    CLIENT_FACTORIES["your_backend"] = _create_your_client

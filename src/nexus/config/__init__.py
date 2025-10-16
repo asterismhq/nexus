@@ -1,7 +1,7 @@
 """Configuration module exposed by the template."""
 
-from .app_settings import AppSettings, settings
 from .mlx_settings import MLXSettings
+from .nexus_settings import NexusSettings, settings
 from .ollama_settings import OllamaSettings
 
-__all__ = ["AppSettings", "MLXSettings", "OllamaSettings", "settings"]
+__all__ = ["NexusSettings", "MLXSettings", "OllamaSettings", "settings"]

@@ -1,20 +1,28 @@
 """Settings for configuring the Ollama client."""
 
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class OllamaSettings(BaseSettings):
     """Configuration for interacting with an Ollama deployment."""
 
-    model_config = {"env_prefix": "NEXUS_OLLAMA_"}
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        populate_by_name=True,
+    )
 
-    host: str = "http://localhost"
-    port: int = 11434
-    model: str = "llama3"
-
-    @property
-    def base_url(self) -> str:
-        """Return the fully qualified base URL for the Ollama service."""
-
-        host = self.host.rstrip("/")
-        return f"{host}:{self.port}"
+    host: str = Field(
+        default="http://localhost:11434",
+        title="Ollama Host",
+        description="The base URL for the Ollama service.",
+        alias="NEXUS_OLLAMA_HOST",
+    )
+    model: str = Field(
+        default="tinyllama:1.1b",
+        title="Ollama Model",
+        description="The model to use for Ollama.",
+        alias="NEXUS_OLLAMA_MODEL",
+    )
