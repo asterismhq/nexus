@@ -1,13 +1,15 @@
-"""Settings for configuring the MLX language model client."""
+"""Settings for configuring MLX connectivity."""
+
+from __future__ import annotations
 
 from typing import Any
 
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class MLXSettings(BaseSettings):
-    """Configuration values for the MLX backend."""
+    """Configuration values for MLX execution and routing."""
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -16,33 +18,44 @@ class MLXSettings(BaseSettings):
         populate_by_name=True,
     )
 
+    host: AnyHttpUrl = Field(
+        default="http://localhost:8080",
+        alias="NEXUS_MLX_HOST",
+        description="Remote MLX server base URL.",
+    )
     model: str = Field(
-        default="mlx-community/Phi-3-mini-4k-instruct-8bit",
-        title="MLX Model",
-        description="Identifier for the MLX model to load.",
+        default="mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit",
         alias="NEXUS_MLX_MODEL",
+        description="Model identifier forwarded to MLX backends.",
     )
     temperature: float = Field(
         default=0.7,
-        title="Temperature",
-        description="Sampling temperature for generation.",
         alias="NEXUS_MLX_TEMPERATURE",
+        description="Sampling temperature for generation.",
     )
     max_tokens: int | None = Field(
         default=None,
-        title="Max Tokens",
-        description="Maximum number of tokens to generate.",
         alias="NEXUS_MLX_MAX_TOKENS",
+        description="Maximum number of tokens to generate.",
     )
     top_p: float | None = Field(
         default=None,
-        title="Top P",
-        description="Top-p sampling parameter.",
         alias="NEXUS_MLX_TOP_P",
+        description="Top-p nucleus sampling parameter.",
+    )
+    timeout: int = Field(
+        default=60,
+        alias="NEXUS_MLX_TIMEOUT",
+        description="Timeout applied to HTTP requests (seconds).",
     )
 
+    def require_host(self) -> str:
+        """Return the configured host."""
+
+        return str(self.host).rstrip("/")
+
     def to_model_kwargs(self) -> dict[str, Any]:
-        """Return keyword arguments for MLX generation calls."""
+        """Return keyword arguments common to MLX generation calls."""
 
         kwargs: dict[str, Any] = {"temperature": self.temperature}
         if self.max_tokens is not None:

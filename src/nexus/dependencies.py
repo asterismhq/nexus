@@ -26,7 +26,7 @@ def _create_ollama_client(_settings: NexusSettings) -> OllamaClient:
     return OllamaClient(OllamaSettings())
 
 
-def _create_mlx_client(_settings: NexusSettings) -> MLXClient:
+def _create_mlx_client(_settings: NexusSettings) -> LLMClientProtocol:
     """Create an MLX client instance."""
     return MLXClient(MLXSettings())
 

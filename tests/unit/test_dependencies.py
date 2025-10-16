@@ -17,6 +17,7 @@ def test_get_app_settings_returns_singleton() -> None:
 
 def test_get_llm_client_returns_mock_ollama_when_enabled(monkeypatch) -> None:
     """get_llm_client should return Ollama mock when use_mock_ollama is True."""
+    monkeypatch.setenv("NEXUS_LLM_BACKEND", "ollama")
     monkeypatch.setenv("NEXUS_USE_MOCK_OLLAMA", "true")
     app_settings = NexusSettings()
 
@@ -29,6 +30,7 @@ def test_get_llm_client_returns_mock_mlx_when_enabled(monkeypatch) -> None:
     """get_llm_client should return MLX mock when use_mock_mlx is True."""
     monkeypatch.setenv("NEXUS_LLM_BACKEND", "mlx")
     monkeypatch.setenv("NEXUS_USE_MOCK_MLX", "true")
+    monkeypatch.setenv("NEXUS_MLX_HOST", "http://localhost:8080")
     app_settings = NexusSettings()
 
     client = get_llm_client(settings=app_settings)
