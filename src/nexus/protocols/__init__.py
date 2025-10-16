@@ -1,4 +1,4 @@
-"""Protocol definitions for stl-conn."""
+"""Protocol definitions for nexus."""
 
 from .llm_client_protocol import LLMClientProtocol
 

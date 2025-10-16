@@ -1,10 +1,10 @@
-"""Shared pytest fixtures for the stl-conn project."""
+"""Shared pytest fixtures for the nexus project."""
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-from stl_conn.api.main import app as fastapi_app
+from nexus.api.main import app as fastapi_app
 
 
 @pytest.fixture()

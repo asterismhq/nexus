@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Sequence
 
 from .client import _validate_response_format
-from .protocol import StlConnClientProtocol
+from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
     MockResponse,
@@ -12,8 +12,8 @@ from .strategies import (
 )
 
 
-class MockStlConnClient:
-    _MOCK_CONTENT = "This is a mock response from Stl-Conn."
+class MockNexusClient:
+    _MOCK_CONTENT = "This is a mock response from Nexus."
 
     def __init__(
         self,
@@ -27,11 +27,11 @@ class MockStlConnClient:
             self._MOCK_CONTENT
         )
 
-    def bind_tools(self, tools: Sequence[Any]) -> "MockStlConnClient":
+    def bind_tools(self, tools: Sequence[Any]) -> "MockNexusClient":
         self._tools = list(tools)
         return self
 
-    def set_strategy(self, strategy: MockResponseStrategy) -> "MockStlConnClient":
+    def set_strategy(self, strategy: MockResponseStrategy) -> "MockNexusClient":
         """Configure the strategy used to build mock responses."""
 
         self._strategy = strategy
@@ -122,4 +122,4 @@ class MockStlConnClient:
 
 
 # For static type checking
-_: StlConnClientProtocol = MockStlConnClient()
+_: NexusClientProtocol = MockNexusClient()

@@ -1,14 +1,14 @@
-from .stl_conn_client import (
+from .nexus_client import (
     CallbackResponseStrategy,
     LangChainResponse,
+    MockNexusClient,
     MockResponse,
     MockResponseStrategy,
-    MockStlConnClient,
+    NexusClient,
+    NexusClientProtocol,
     PatternMatchingStrategy,
     SequenceResponseStrategy,
     SimpleResponseStrategy,
-    StlConnClient,
-    StlConnClientProtocol,
 )
 
 __all__ = [
@@ -16,10 +16,10 @@ __all__ = [
     "LangChainResponse",
     "MockResponse",
     "MockResponseStrategy",
-    "MockStlConnClient",
+    "MockNexusClient",
     "PatternMatchingStrategy",
     "SequenceResponseStrategy",
     "SimpleResponseStrategy",
-    "StlConnClient",
-    "StlConnClientProtocol",
+    "NexusClient",
+    "NexusClientProtocol",
 ]

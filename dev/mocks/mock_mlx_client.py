@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from stl_conn.config.mlx_settings import MLXSettings
-from stl_conn.protocols.llm_client_protocol import LLMClientProtocol
+from nexus.config.mlx_settings import MLXSettings
+from nexus.protocols.llm_client_protocol import LLMClientProtocol
 
 
 class MockMLXClient(LLMClientProtocol):

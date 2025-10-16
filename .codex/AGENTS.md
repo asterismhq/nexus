@@ -69,11 +69,11 @@ Avoid filtering or renaming these keys in router logic—leave interpretation to
 
 ## SDK Usage
 
-The SDK (`stl_conn_sdk`) now ships LangChain-first ergonomics:
+The SDK (`nexus_sdk`) now ships LangChain-first ergonomics:
 
-- `StlConnClient`: HTTP client that accepts raw LangChain message objects or dict payloads and exposes `bind_tools()` for method chaining.
-- `MockStlConnClient`: Feature-parity mock that records serialized payloads and mirrors `bind_tools()`.
-- `StlConnClientProtocol`: Protocol for type checking.
+- `NexusClient`: HTTP client that accepts raw LangChain message objects or dict payloads and exposes `bind_tools()` for method chaining.
+- `MockNexusClient`: Feature-parity mock that records serialized payloads and mirrors `bind_tools()`.
+- `NexusClientProtocol`: Protocol for type checking.
 - `LangChainResponse`: Structured response wrapper returned when `response_format="langchain"`.
 - Strategy helpers (`SimpleResponseStrategy`, `SequenceResponseStrategy`, `PatternMatchingStrategy`, `CallbackResponseStrategy`, `LegacyKeywordStrategy`) let tests configure mock behaviour without editing shared code.
 
@@ -82,10 +82,10 @@ The SDK (`stl_conn_sdk`) now ships LangChain-first ergonomics:
 ```python
 import asyncio
 from langchain_core.messages import HumanMessage
-from stl_conn_sdk.stl_conn_client import StlConnClient
+from nexus_sdk.stl_conn_client import NexusClient
 
 async def main():
-    client = StlConnClient(
+    client = NexusClient(
         base_url="http://localhost:8000",
         response_format="langchain",
     )
@@ -104,10 +104,10 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from stl_conn_sdk.stl_conn_client import MockStlConnClient
+from nexus_sdk.stl_conn_client import MockNexusClient
 
 async def main():
-    mock_client = MockStlConnClient(response_format="langchain").bind_tools(
+    mock_client = MockNexusClient(response_format="langchain").bind_tools(
         [{"name": "search"}]
     )
     response = await mock_client.invoke([{"role": "user", "content": "search"}])

@@ -1,10 +1,10 @@
-from .client import StlConnClient
+from .client import NexusClient
 from .mock import (
+    MockNexusClient,
     MockResponse,
     MockResponseStrategy,
-    MockStlConnClient,
 )
-from .protocol import StlConnClientProtocol
+from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
     CallbackResponseStrategy,
@@ -18,10 +18,10 @@ __all__ = [
     "LangChainResponse",
     "MockResponse",
     "MockResponseStrategy",
-    "MockStlConnClient",
+    "MockNexusClient",
     "PatternMatchingStrategy",
     "SequenceResponseStrategy",
     "SimpleResponseStrategy",
-    "StlConnClient",
-    "StlConnClientProtocol",
+    "NexusClient",
+    "NexusClientProtocol",
 ]
