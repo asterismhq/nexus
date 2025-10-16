@@ -1,4 +1,4 @@
-"""stl-conn package exposing FastAPI app and configuration."""
+"""nexus package exposing FastAPI app and configuration."""
 
 __all__ = [
     "api",

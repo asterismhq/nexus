@@ -2,8 +2,8 @@
 
 from dev.mocks.mock_mlx_client import MockMLXClient
 from dev.mocks.mock_ollama_client import MockOllamaClient
-from stl_conn.config import AppSettings
-from stl_conn.dependencies import get_app_settings, get_llm_client
+from nexus.config import AppSettings
+from nexus.dependencies import get_app_settings, get_llm_client
 
 
 def test_get_app_settings_returns_singleton() -> None:
@@ -12,7 +12,7 @@ def test_get_app_settings_returns_singleton() -> None:
     settings2 = get_app_settings()
 
     assert settings1 is settings2
-    assert settings1.app_name == "stl-conn"
+    assert settings1.app_name == "nexus"
 
 
 def test_get_llm_client_returns_mock_ollama_when_enabled() -> None:

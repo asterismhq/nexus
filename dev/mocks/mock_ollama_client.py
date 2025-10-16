@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from stl_conn.config.ollama_settings import OllamaSettings
-from stl_conn.protocols.llm_client_protocol import LLMClientProtocol
+from nexus.config.ollama_settings import OllamaSettings
+from nexus.protocols.llm_client_protocol import LLMClientProtocol
 
 
 class MockOllamaClient(LLMClientProtocol):

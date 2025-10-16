@@ -1,10 +1,10 @@
-# Stella Connector SDK
+# Nexus SDK
 
-The Stella Connector SDK provides a Python client library for interacting with the Stella Connector API, enabling seamless integration with Large Language Model (LLM) services through a unified interface.
+The Nexus SDK provides a Python client library for interacting with the Nexus API, enabling seamless integration with Large Language Model (LLM) services through a unified interface.
 
 ## Overview
 
-Stella Connector is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX). The SDK allows external applications to easily invoke LLM operations without directly managing HTTP requests or backend-specific configurations.
+Nexus is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX). The SDK allows external applications to easily invoke LLM operations without directly managing HTTP requests or backend-specific configurations.
 
 ### Key Features
 
@@ -24,10 +24,10 @@ Stella Connector is a FastAPI service that mediates LLM inference across multipl
 ```python
 import asyncio
 from langchain_core.messages import HumanMessage
-from stl_conn_sdk.stl_conn_client import StlConnClient
+from nexus_sdk.nexus_client import NexusClient
 
 async def main():
-    client = StlConnClient(
+    client = NexusClient(
         base_url="http://localhost:8000",
         response_format="langchain",
     )
@@ -42,10 +42,10 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from stl_conn_sdk.stl_conn_client import StlConnClient
+from nexus_sdk.nexus_client import NexusClient
 
 async def main():
-    client = StlConnClient(base_url="https://your-stl-conn-instance.com")
+    client = NexusClient(base_url="https://your-stl-conn-instance.com")
     client.bind_tools([{"name": "calculator"}])
 
     response = await client.invoke([{"role": "user", "content": "What is 2+2?"}])
@@ -64,10 +64,10 @@ response = await client.invoke({"input": "Explain quantum computing", "temperatu
 
 ```python
 import asyncio
-from stl_conn_sdk.stl_conn_client import MockStlConnClient
+from nexus_sdk.nexus_client import MockNexusClient
 
 async def main():
-    client = MockStlConnClient(response_format="langchain").bind_tools(
+    client = MockNexusClient(response_format="langchain").bind_tools(
         [{"name": "search"}]
     )
 
@@ -83,14 +83,14 @@ asyncio.run(main())
 The mock client now accepts pluggable strategies so tests can precisely control the simulated output:
 
 ```python
-from stl_conn_sdk.stl_conn_client import (
-    MockStlConnClient,
+from nexus_sdk.nexus_client import (
+    MockNexusClient,
     SequenceResponseStrategy,
     SimpleResponseStrategy,
 )
 
 # Default behaviour mirrors a simple textual response
-mock_client = MockStlConnClient()
+mock_client = MockNexusClient()
 
 # Fixed JSON payload with bespoke tool call metadata
 mock_client.set_strategy(
@@ -117,11 +117,11 @@ Additional built-ins include `PatternMatchingStrategy` and `CallbackResponseStra
 
 ```python
 import pytest
-from stl_conn_sdk.stl_conn_client import MockStlConnClient
+from nexus_sdk.nexus_client import MockNexusClient
 
 @pytest.mark.asyncio
 async def test_my_function():
-    mock_client = MockStlConnClient()
+    mock_client = MockNexusClient()
 
     # Call your function that uses the client
     result = await my_function_that_uses_client(mock_client)
@@ -136,21 +136,21 @@ async def test_my_function():
 
 ## API Reference
 
-### StlConnClient
+### NexusClient
 
 #### Constructor
 
 ```python
-StlConnClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
+NexusClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 ```
 
-- `base_url`: Base URL of the Stella Connector API (e.g., "http://localhost:8000")
+- `base_url`: Base URL of the Nexus API (e.g., "http://localhost:8000")
 - `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`)
 - `timeout`: Request timeout in seconds (default: 10.0)
 
 #### Methods
 
-##### `bind_tools(tools: Sequence[Any]) -> StlConnClient`
+##### `bind_tools(tools: Sequence[Any]) -> NexusClient`
 
 Registers tool definitions for upcoming requests. Returns `self` so calls can be chained.
 
@@ -177,26 +177,26 @@ Closes the underlying HTTP client connection pool. Should be called when the cli
 **Usage with context manager:**
 
 ```python
-async with StlConnClient(base_url="http://localhost:8000") as client:
+async with NexusClient(base_url="http://localhost:8000") as client:
     response = await client.invoke({"input": "Hello"})
 ```
 
 **Manual cleanup:**
 
 ```python
-client = StlConnClient(base_url="http://localhost:8000")
+client = NexusClient(base_url="http://localhost:8000")
 try:
     response = await client.invoke({"input": "Hello"})
 finally:
     await client.aclose()
 ```
 
-### MockStlConnClient
+### MockNexusClient
 
 #### Constructor
 
 ```python
-MockStlConnClient(
+MockNexusClient(
     response_format: str = "dict",
     strategy: MockResponseStrategy | None = None,
 )
@@ -204,13 +204,13 @@ MockStlConnClient(
 
 #### Methods
 
-##### `bind_tools(tools: Sequence[Any]) -> MockStlConnClient`
+##### `bind_tools(tools: Sequence[Any]) -> MockNexusClient`
 
 Mirrors the real client by storing bound tools and returning `self`.
 
 ##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
 
-Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `StlConnClient`. The response is controlled by the configured strategy (defaults to `SimpleResponseStrategy`).
+Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `NexusClient`. The response is controlled by the configured strategy (defaults to `SimpleResponseStrategy`).
 
 #### Properties
 

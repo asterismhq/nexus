@@ -4,7 +4,7 @@ from typing import Any, Dict, Final, List, Sequence
 
 import httpx
 
-from .protocol import StlConnClientProtocol
+from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 
 _DEFAULT_RESPONSE_FORMAT: Final[str] = "dict"
@@ -20,7 +20,7 @@ def _validate_response_format(response_format: str) -> str:
     return response_format
 
 
-class StlConnClient:
+class NexusClient:
     def __init__(
         self,
         base_url: str,
@@ -32,7 +32,7 @@ class StlConnClient:
         self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout)
         self._tools: List[Any] | None = None
 
-    def bind_tools(self, tools: Sequence[Any]) -> "StlConnClient":
+    def bind_tools(self, tools: Sequence[Any]) -> "NexusClient":
         """Store tool definitions for upcoming invokes (LangChain-style chaining)."""
         self._tools = list(tools)
         return self
@@ -134,7 +134,7 @@ class StlConnClient:
         """Close the underlying HTTP client."""
         await self._client.aclose()
 
-    async def __aenter__(self) -> "StlConnClient":
+    async def __aenter__(self) -> "NexusClient":
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -142,4 +142,4 @@ class StlConnClient:
 
 
 # For static type checking
-_: StlConnClientProtocol = StlConnClient(base_url="")
+_: NexusClientProtocol = NexusClient(base_url="")

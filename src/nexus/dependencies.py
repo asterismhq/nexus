@@ -1,4 +1,4 @@
-"""FastAPI dependency providers for the stella connector service."""
+"""FastAPI dependency providers for the nexus service."""
 
 from __future__ import annotations
 

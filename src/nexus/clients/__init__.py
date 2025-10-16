@@ -1,4 +1,4 @@
-"""Client implementations for the stl-conn service."""
+"""Client implementations for the nexus service."""
 
 from .mlx_client import MLXClient
 from .ollama_client import OllamaClient

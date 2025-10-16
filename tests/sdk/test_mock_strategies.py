@@ -1,5 +1,5 @@
 import pytest
-from stl_conn_sdk.stl_conn_client import (
+from nexus_sdk.nexus_client import (
     CallbackResponseStrategy,
     PatternMatchingStrategy,
     SequenceResponseStrategy,
