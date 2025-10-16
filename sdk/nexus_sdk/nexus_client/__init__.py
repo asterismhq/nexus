@@ -1,9 +1,10 @@
-from .client import NexusClient
+from .mlx_client import NexusMLXClient
 from .mock import (
     MockNexusClient,
     MockResponse,
     MockResponseStrategy,
 )
+from .ollama_client import NexusOllamaClient
 from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
@@ -22,6 +23,7 @@ __all__ = [
     "PatternMatchingStrategy",
     "SequenceResponseStrategy",
     "SimpleResponseStrategy",
-    "NexusClient",
+    "NexusMLXClient",
+    "NexusOllamaClient",
     "NexusClientProtocol",
 ]

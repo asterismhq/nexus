@@ -4,7 +4,7 @@ import time
 import uuid
 from typing import Any, Dict, List, Sequence
 
-from .client import _validate_response_format
+from .base_client import _normalize_backend_name, _validate_response_format
 from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
@@ -21,6 +21,8 @@ class MockNexusClient:
         self,
         response_format: str = "dict",
         strategy: MockResponseStrategy | None = None,
+        *,
+        backend: str,
     ) -> None:
         self.response_format = _validate_response_format(response_format)
         self.invocations: List[Dict[str, Any]] = []
@@ -28,6 +30,7 @@ class MockNexusClient:
         self._strategy: MockResponseStrategy = strategy or SimpleResponseStrategy(
             self._MOCK_CONTENT
         )
+        self._backend = _normalize_backend_name(backend)
 
     def bind_tools(self, tools: Sequence[Any]) -> "MockNexusClient":
         self._tools = list(tools)
@@ -43,8 +46,26 @@ class MockNexusClient:
     def strategy(self) -> MockResponseStrategy:
         return self._strategy
 
-    async def invoke(self, input_data: Any, **_: Any) -> Any:
+    async def invoke(self, input_data: Any, **kwargs: Any) -> Any:
         payload = self._prepare_payload(input_data)
+        if "backend" in payload and isinstance(payload["backend"], str):
+            payload["backend"] = _normalize_backend_name(payload["backend"])
+
+        override_backend = kwargs.pop("backend", None)
+        if override_backend:
+            payload["backend"] = _normalize_backend_name(str(override_backend))
+        else:
+            payload.setdefault("backend", self._backend)
+
+        if kwargs:
+            filtered_kwargs = {
+                key: value
+                for key, value in kwargs.items()
+                if key not in {"model", "messages", "tools"}
+            }
+            if filtered_kwargs:
+                payload.update(filtered_kwargs)
+
         self.invocations.append(payload)
         response = self._resolve_response(payload)
         wire_response = self._build_openai_response(payload, response)
@@ -184,4 +205,4 @@ class MockNexusClient:
 
 
 # For static type checking
-_: NexusClientProtocol = MockNexusClient()
+_: NexusClientProtocol = MockNexusClient(backend="ollama")

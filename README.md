@@ -110,7 +110,7 @@ Use this as a foundation for adding your own routes, dependencies, and persisten
 
 ## SDK
 
-This repository includes a Python SDK for interacting with the Nexus API. The SDK acts as a drop-in LangChain client, allowing you to pass LangChain message objects directly to `NexusClient.invoke()` and use `bind_tools()` to chain tool definitions in the LangChain style. Responses can be returned as `LangChainResponse` objects.
+This repository includes a Python SDK for interacting with the Nexus API. The SDK acts as a drop-in LangChain client, allowing you to pass LangChain message objects directly to the backend-specific clients (`NexusOllamaClient` / `NexusMLXClient`) and use `bind_tools()` to chain tool definitions in the LangChain style. Instantiate the class that matches your target backend and call `invoke()` to execute requests. Responses can be returned as `LangChainResponse` objects.
 
 The `MockNexusClient` supports pluggable response strategies for testing, including:
 

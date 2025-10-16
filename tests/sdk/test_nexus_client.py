@@ -1,55 +1,77 @@
-from typing import Optional
+from typing import Any, Optional, Type
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from nexus_sdk.nexus_client import (
     LangChainResponse,
     MockNexusClient,
-    NexusClient,
+    NexusMLXClient,
+    NexusOllamaClient,
     SimpleResponseStrategy,
 )
+
+_BASE_CLIENT_PATH = "nexus_sdk.nexus_client.base_client.httpx.AsyncClient"
 
 
 class _FakeLangChainMessage:
     def __init__(
         self, msg_type: str, content: str, additional_kwargs: Optional[dict] = None
-    ):
+    ) -> None:
         self.type = msg_type
         self.content = content
         self.additional_kwargs = additional_kwargs or {}
 
 
 @pytest.mark.asyncio
-async def test_stl_conn_client_invoke_with_dict_payload():
+@pytest.mark.parametrize(
+    ("client_cls", "expected_backend"),
+    [
+        (NexusOllamaClient, "ollama"),
+        (NexusMLXClient, "mlx"),
+    ],
+)
+async def test_backend_clients_invoke_with_dict_payload(
+    client_cls: Type[Any], expected_backend: str
+) -> None:
     mock_response = Mock()
     mock_response.json.return_value = {"result": "test"}
     mock_response.raise_for_status.return_value = None
-    with patch("httpx.AsyncClient") as mock_client_class:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
         mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_client_class.return_value = mock_client_instance
-        client = NexusClient(base_url="http://example.com")
+        client = client_cls(base_url="http://example.com")
         result = await client.invoke({"model": "test-model", "messages": "test"})
         mock_client_instance.post.assert_called_once_with(
             "/v1/chat/completions",
             json={
                 "model": "test-model",
                 "messages": [{"role": "user", "content": "test"}],
+                "backend": expected_backend,
             },
         )
         assert result == {"result": "test"}
 
 
 @pytest.mark.asyncio
-async def test_stl_conn_client_serializes_langchain_messages():
+@pytest.mark.parametrize(
+    ("client_cls", "expected_backend"),
+    [
+        (NexusOllamaClient, "ollama"),
+        (NexusMLXClient, "mlx"),
+    ],
+)
+async def test_backend_clients_serialize_langchain_messages(
+    client_cls: Type[Any], expected_backend: str
+) -> None:
     mock_response = Mock()
     mock_response.json.return_value = {"result": "ok"}
     mock_response.raise_for_status.return_value = None
-    with patch("httpx.AsyncClient") as mock_client_class:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
         mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_client_class.return_value = mock_client_instance
-        client = NexusClient(base_url="http://example.com")
+        client = client_cls(base_url="http://example.com")
 
         messages = [
             _FakeLangChainMessage("user", "hello"),
@@ -68,20 +90,30 @@ async def test_stl_conn_client_serializes_langchain_messages():
                     {"role": "assistant", "content": "hi"},
                     {"role": "user", "content": "fallback"},
                 ],
+                "backend": expected_backend,
             },
         )
 
 
 @pytest.mark.asyncio
-async def test_stl_conn_client_bind_tools_adds_tools():
+@pytest.mark.parametrize(
+    ("client_cls", "expected_backend"),
+    [
+        (NexusOllamaClient, "ollama"),
+        (NexusMLXClient, "mlx"),
+    ],
+)
+async def test_backend_clients_bind_tools_adds_tools(
+    client_cls: Type[Any], expected_backend: str
+) -> None:
     mock_response = Mock()
     mock_response.json.return_value = {"result": "ok"}
     mock_response.raise_for_status.return_value = None
-    with patch("httpx.AsyncClient") as mock_client_class:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
         mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_client_class.return_value = mock_client_instance
-        client = NexusClient(base_url="http://example.com")
+        client = client_cls(base_url="http://example.com")
 
         client.bind_tools([{"name": "calculator"}])
         await client.invoke(
@@ -97,12 +129,19 @@ async def test_stl_conn_client_bind_tools_adds_tools():
                 "model": "test-model",
                 "messages": [{"role": "user", "content": "compute"}],
                 "tools": [{"name": "calculator"}],
+                "backend": expected_backend,
             },
         )
 
 
 @pytest.mark.asyncio
-async def test_stl_conn_client_invoke_langchain_response():
+@pytest.mark.parametrize(
+    "client_cls",
+    [NexusOllamaClient, NexusMLXClient],
+)
+async def test_backend_clients_langchain_response(
+    client_cls: Type[Any],
+) -> None:
     mock_response = Mock()
     mock_response.json.return_value = {
         "id": "chatcmpl-test",
@@ -124,11 +163,11 @@ async def test_stl_conn_client_invoke_langchain_response():
     }
     mock_response.raise_for_status.return_value = None
 
-    with patch("httpx.AsyncClient") as mock_client_class:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
         mock_client_instance = AsyncMock()
         mock_client_instance.post.return_value = mock_response
         mock_client_class.return_value = mock_client_instance
-        client = NexusClient(base_url="http://example.com", response_format="langchain")
+        client = client_cls(base_url="http://example.com", response_format="langchain")
 
         result = await client.invoke(
             {"model": "test-model", "messages": [{"role": "user", "content": "test"}]}
@@ -140,32 +179,44 @@ async def test_stl_conn_client_invoke_langchain_response():
         assert result.raw_response == mock_response.json.return_value
 
 
-def test_stl_conn_client_rejects_unknown_response_format():
+@pytest.mark.parametrize(
+    "client_cls",
+    [NexusOllamaClient, NexusMLXClient],
+)
+def test_clients_reject_unknown_response_format(client_cls: Type[Any]) -> None:
     with pytest.raises(ValueError):
-        NexusClient(base_url="http://example.com", response_format="unknown")
+        client_cls(base_url="http://example.com", response_format="unknown")
 
 
-def test_stl_conn_client_timeout_parameter():
-    with patch("httpx.AsyncClient") as mock_client_class:
-        NexusClient(base_url="http://example.com", timeout=30.0)
+@pytest.mark.parametrize(
+    "client_cls",
+    [NexusOllamaClient, NexusMLXClient],
+)
+def test_backend_clients_timeout_parameter(client_cls: Type[Any]) -> None:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
+        client_cls(base_url="http://example.com", timeout=30.0)
         mock_client_class.assert_called_once_with(
             base_url="http://example.com", timeout=30.0
         )
 
 
 @pytest.mark.asyncio
-async def test_stl_conn_client_aclose():
-    with patch("httpx.AsyncClient") as mock_client_class:
+@pytest.mark.parametrize(
+    "client_cls",
+    [NexusOllamaClient, NexusMLXClient],
+)
+async def test_backend_clients_aclose(client_cls: Type[Any]) -> None:
+    with patch(_BASE_CLIENT_PATH) as mock_client_class:
         mock_client_instance = AsyncMock()
         mock_client_class.return_value = mock_client_instance
-        client = NexusClient(base_url="http://example.com")
+        client = client_cls(base_url="http://example.com")
         await client.aclose()
         mock_client_instance.aclose.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_mock_client_langchain_response():
-    client = MockNexusClient(response_format="langchain")
+async def test_mock_client_langchain_response() -> None:
+    client = MockNexusClient(response_format="langchain", backend="ollama")
     result = await client.invoke(
         {"model": "mock", "messages": [{"role": "user", "content": "test"}]}
     )
@@ -176,8 +227,8 @@ async def test_mock_client_langchain_response():
 
 
 @pytest.mark.asyncio
-async def test_mock_client_records_serialized_invocations_with_tools():
-    client = MockNexusClient()
+async def test_mock_client_records_serialized_invocations_with_tools() -> None:
+    client = MockNexusClient(backend="ollama")
     client.bind_tools([{"name": "web_search"}])
 
     await client.invoke(
@@ -193,20 +244,23 @@ async def test_mock_client_records_serialized_invocations_with_tools():
         {"role": "user", "content": "go find", "additional_kwargs": {"foo": "bar"}}
     ]
     assert recorded["tools"] == [{"name": "web_search"}]
+    assert recorded["backend"] == "ollama"
 
 
-def test_mock_client_rejects_unknown_response_format():
+def test_mock_client_rejects_unknown_response_format() -> None:
     with pytest.raises(ValueError):
-        MockNexusClient(response_format="unknown")
+        MockNexusClient(response_format="unknown", backend="ollama")
 
 
 @pytest.mark.asyncio
-async def test_mock_client_langchain_response_with_tools():
+async def test_mock_client_langchain_response_with_tools() -> None:
     strategy = SimpleResponseStrategy(
         content={"result": "ok"},
         tool_calls=[{"name": "calculator", "args": {"total": 42}}],
     )
-    client = MockNexusClient(response_format="langchain", strategy=strategy)
+    client = MockNexusClient(
+        response_format="langchain", strategy=strategy, backend="ollama"
+    )
     client.bind_tools([{"name": "calculator"}])
     result = await client.invoke(
         {"model": "mock", "messages": [{"role": "user", "content": "test"}]}
@@ -216,3 +270,10 @@ async def test_mock_client_langchain_response_with_tools():
     assert result.content == {"result": "ok"}
     assert result.tool_calls == [{"name": "calculator", "args": {"total": 42}}]
     assert client.invocations[-1]["tools"] == [{"name": "calculator"}]
+
+
+@pytest.mark.asyncio
+async def test_mock_client_records_backend_choice() -> None:
+    client = MockNexusClient(backend="mlx")
+    await client.invoke({"model": "mock", "messages": "hi"})
+    assert client.invocations[-1]["backend"] == "mlx"
