@@ -22,7 +22,7 @@ class OllamaClient(LLMClientProtocol):
             ) from exc
 
         self._settings = settings
-        self._client = AsyncClient(host=settings.base_url)
+        self._client = AsyncClient(host=settings.host)
         self._tools: list[Any] = []
 
     async def invoke(self, messages: Any, **kwargs: Any) -> Any:
