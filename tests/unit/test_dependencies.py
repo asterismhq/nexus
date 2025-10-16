@@ -17,6 +17,7 @@ def test_get_app_settings_returns_singleton() -> None:
 
 def test_get_llm_client_returns_mock_ollama_when_enabled(monkeypatch) -> None:
     """get_llm_client should return Ollama mock when use_mock_ollama is True."""
+    monkeypatch.setenv("NEXUS_LLM_BACKEND", "ollama")
     monkeypatch.setenv("NEXUS_USE_MOCK_OLLAMA", "true")
     app_settings = NexusSettings()
 

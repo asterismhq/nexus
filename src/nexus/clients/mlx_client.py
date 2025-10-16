@@ -1,55 +1,61 @@
-"""MLX implementation of the :class:`LLMClientProtocol`."""
+"""HTTP client for remote MLX servers."""
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Iterable
-from typing import Any
+from typing import Any, Iterable
+
+import httpx
 
 from ..config.mlx_settings import MLXSettings
 from ..protocols.llm_client_protocol import LLMClientProtocol
 
 
 class MLXClient(LLMClientProtocol):
-    """Thin wrapper around `mlx-lm` helpers."""
+    """HTTP client for remote MLX servers supporting OpenAI or JSON formats."""
 
-    def __init__(self, settings: MLXSettings) -> None:
-        self._settings = settings
-        self._model: Any | None = None
-        self._tokenizer: Any | None = None
+    def __init__(self, settings: MLXSettings | None = None) -> None:
+        self._settings = settings or MLXSettings()
         self._tools: list[Any] = []
 
     async def invoke(self, messages: Any, **kwargs: Any) -> Any:
-        prompt = self._format_messages(messages)
         generation_kwargs = {**self._settings.to_model_kwargs(), **kwargs}
         if self._tools:
-            # Note: mlx-lm may not support tools natively, but we include them for consistency
             generation_kwargs["tools"] = self._tools
-        model, tokenizer = self._ensure_model_loaded()
-        return await asyncio.to_thread(
-            self._generate, model, tokenizer, prompt, generation_kwargs
-        )
+
+        return await self._call_openai(messages, generation_kwargs)
 
     def bind_tools(self, tools: list[Any]) -> "MLXClient":
         self._tools = tools
         return self
 
-    def _ensure_model_loaded(self) -> tuple[Any, Any]:
-        if self._model is None or self._tokenizer is None:
-            try:
-                from mlx_lm import load
-            except ImportError as exc:  # pragma: no cover - runtime dependency
-                raise RuntimeError("mlx-lm must be installed to use MLXClient") from exc
+    async def _call_openai(self, messages: Any, kwargs: dict[str, Any]) -> str:
+        base_url = self._settings.require_host()
 
-            self._model, self._tokenizer = load(self._settings.model)
-        return self._model, self._tokenizer
+        payload: dict[str, Any] = {
+            "model": self._settings.model,
+            "messages": messages,
+            "stream": False,
+        }
+        payload.update(kwargs)
 
-    def _generate(
-        self, model: Any, tokenizer: Any, prompt: str, kwargs: dict[str, Any]
-    ) -> Any:
-        from mlx_lm import generate
+        headers = {"Content-Type": "application/json"}
 
-        return generate(model, tokenizer, prompt, **kwargs)
+        async with httpx.AsyncClient(timeout=self._settings.timeout) as client:
+            response = await client.post(
+                f"{base_url}/v1/chat/completions",
+                json=payload,
+                headers=headers,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        try:
+            choice = data["choices"][0]
+            return str(choice["message"]["content"])
+        except (KeyError, IndexError, TypeError) as exc:
+            raise RuntimeError(
+                "Malformed response from OpenAI-compatible MLX backend"
+            ) from exc
 
     def _format_messages(self, messages: Any) -> str:
         if isinstance(messages, str):

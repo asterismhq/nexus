@@ -1,8 +1,6 @@
 """Application-level settings for the FastAPI template."""
 
-from typing import Any
-
-from pydantic import Field, field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -64,14 +62,6 @@ class NexusSettings(BaseSettings):
         description="Toggle mock MLX client for tests.",
         alias="NEXUS_USE_MOCK_MLX",
     )
-
-    @field_validator("debug", mode="before")
-    @classmethod
-    def parse_debug(cls, value: Any) -> bool:
-        """Ensure debug is parsed as a boolean from string."""
-        if isinstance(value, str):
-            return value.lower() in {"true", "1", "yes", "on"}
-        return bool(value)
 
 
 settings = NexusSettings()

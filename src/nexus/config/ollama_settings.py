@@ -1,6 +1,6 @@
 """Settings for configuring the Ollama client."""
 
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +14,7 @@ class OllamaSettings(BaseSettings):
         populate_by_name=True,
     )
 
-    host: str = Field(
+    host: AnyHttpUrl = Field(
         default="http://localhost:11434",
         title="Ollama Host",
         description="The base URL for the Ollama service.",
