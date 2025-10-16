@@ -11,6 +11,33 @@ _DEFAULT_RESPONSE_FORMAT: Final[str] = "dict"
 _SUPPORTED_RESPONSE_FORMATS: Final[frozenset[str]] = frozenset({"dict", "langchain"})
 
 
+def _normalize_backend_name(value: str) -> str:
+    return value.lower().strip()
+
+
+def _prepare_invoke_payload(
+    payload: Dict[str, Any], kwargs: Dict[str, Any], backend: str
+) -> None:
+    """Prepare payload for invoke by handling backend and kwargs."""
+    if "backend" in payload and isinstance(payload["backend"], str):
+        payload["backend"] = _normalize_backend_name(payload["backend"])
+
+    override_backend = kwargs.pop("backend", None)
+    if override_backend:
+        payload["backend"] = _normalize_backend_name(str(override_backend))
+    else:
+        payload.setdefault("backend", backend)
+
+    if kwargs:
+        filtered_kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key not in {"model", "messages", "tools"}
+        }
+        if filtered_kwargs:
+            payload.update(filtered_kwargs)
+
+
 def _validate_response_format(response_format: str) -> str:
     if response_format not in _SUPPORTED_RESPONSE_FORMATS:
         supported = ", ".join(sorted(_SUPPORTED_RESPONSE_FORMATS))
@@ -20,25 +47,33 @@ def _validate_response_format(response_format: str) -> str:
     return response_format
 
 
-class NexusClient:
+class BaseNexusClient(NexusClientProtocol):
+    """Shared HTTP client implementation for the Nexus SDK backends."""
+
     def __init__(
         self,
         base_url: str,
         response_format: str = _DEFAULT_RESPONSE_FORMAT,
         timeout: float = 10.0,
-    ):
+        *,
+        backend: str,
+    ) -> None:
         self.base_url = base_url
         self.response_format = _validate_response_format(response_format)
         self._client = httpx.AsyncClient(base_url=base_url, timeout=timeout)
+        self._backend = _normalize_backend_name(backend)
         self._tools: List[Any] | None = None
 
-    def bind_tools(self, tools: Sequence[Any]) -> "NexusClient":
+    def bind_tools(self, tools: Sequence[Any]) -> "BaseNexusClient":
         """Store tool definitions for upcoming invokes (LangChain-style chaining)."""
+
         self._tools = list(tools)
         return self
 
-    async def invoke(self, input_data: Any, **_: Any) -> Any:
+    async def invoke(self, input_data: Any, **kwargs: Any) -> Any:
         payload = self._prepare_payload(input_data)
+        _prepare_invoke_payload(payload, kwargs, self._backend)
+
         response = await self._client.post("/v1/chat/completions", json=payload)
         response.raise_for_status()
         result = response.json()
@@ -87,14 +122,13 @@ class NexusClient:
         )
 
     def _prepare_payload(self, input_data: Any) -> Dict[str, Any]:
-        """
-        Normalize payload for the /invoke endpoint.
-
+        """Normalize payload for the /invoke endpoint.
         Accepts:
         - Raw dicts (backwards compatibility)
         - LangChain message objects (list with `.type`/`.content`)
         - Plain lists of dicts/strings
         """
+
         if isinstance(input_data, dict):
             payload = dict(input_data)
         else:
@@ -157,22 +191,23 @@ class NexusClient:
                     {
                         "role": getattr(msg, "type"),
                         "content": getattr(msg, "content"),
+                        "additional_kwargs": getattr(msg, "additional_kwargs", None)
+                        or None,
                     }
                 )
+                if normalized[-1]["additional_kwargs"] is None:
+                    normalized[-1].pop("additional_kwargs")
                 continue
             normalized.append({"role": "user", "content": str(msg)})
         return normalized
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client."""
+
         await self._client.aclose()
 
-    async def __aenter__(self) -> "NexusClient":
+    async def __aenter__(self) -> "BaseNexusClient":
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: D401
         await self.aclose()
-
-
-# For static type checking
-_: NexusClientProtocol = NexusClient(base_url="")

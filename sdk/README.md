@@ -4,11 +4,12 @@ The Nexus SDK provides a Python client library for interacting with the Nexus AP
 
 ## Overview
 
-Nexus is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX). The SDK allows external applications to easily invoke LLM operations without directly managing HTTP requests or backend-specific configurations.
+Nexus is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX). The SDK ships backend-aware clients—`NexusOllamaClient` and `NexusMLXClient`—so external applications can choose or pin a backend without manually shaping HTTP requests.
 
 ### Key Features
 
 - **Unified API**: Single interface for multiple LLM backends.
+- **Backend Hints**: Pick a backend once or override per call without changing payload shapes.
 - **LangChain Native**: Accepts LangChain message objects and returns `LangChainResponse` when requested.
 - **Tool Binding**: `bind_tools()` mirrors LangChain patterns for function calling.
 - **Async Support**: Full asyncio compatibility for high-performance applications.
@@ -24,10 +25,11 @@ Nexus is a FastAPI service that mediates LLM inference across multiple pluggable
 ```python
 import asyncio
 from langchain_core.messages import HumanMessage
-from nexus_sdk.nexus_client import NexusClient
+from nexus_sdk.nexus_client import NexusOllamaClient
+
 
 async def main():
-    client = NexusClient(
+    client = NexusOllamaClient(
         base_url="http://localhost:8000",
         response_format="langchain",
     )
@@ -40,6 +42,7 @@ async def main():
     )
     print(response.content)
 
+
 asyncio.run(main())
 ```
 
@@ -47,10 +50,11 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from nexus_sdk.nexus_client import NexusClient
+from nexus_sdk.nexus_client import NexusMLXClient
+
 
 async def main():
-    client = NexusClient(base_url="https://your-nexus-instance.com")
+    client = NexusMLXClient(base_url="https://your-nexus-instance.com")
     client.bind_tools([{"name": "calculator"}])
 
     response = await client.invoke(
@@ -60,6 +64,7 @@ async def main():
         }
     )
     print(response)
+
 
 asyncio.run(main())
 ```
@@ -77,6 +82,29 @@ response = await client.invoke(
 )
 ```
 
+### Backend Selection
+
+Pick the correct runtime by instantiating the corresponding client class. The backend hint is encoded in the class itself, so there is no separate flag to remember later. Example with the MLX client:
+
+```python
+import asyncio
+from nexus_sdk.nexus_client import NexusMLXClient
+
+
+async def main():
+    client = NexusMLXClient(base_url="http://localhost:8000")
+    result = await client.invoke(
+        {
+            "model": "mlx-model",
+            "messages": "summarise the paper",
+        }
+    )
+    print(result)
+
+
+asyncio.run(main())
+```
+
 ### Mock Client for Testing
 
 ```python
@@ -84,7 +112,7 @@ import asyncio
 from nexus_sdk.nexus_client import MockNexusClient
 
 async def main():
-    client = MockNexusClient(response_format="langchain").bind_tools(
+    client = MockNexusClient(response_format="langchain", backend="ollama").bind_tools(
         [{"name": "search"}]
     )
 
@@ -112,7 +140,7 @@ from nexus_sdk.nexus_client import (
 )
 
 # Default behaviour mirrors a simple textual response
-mock_client = MockNexusClient()
+mock_client = MockNexusClient(backend="ollama")
 
 # Fixed JSON payload with bespoke tool call metadata
 mock_client.set_strategy(
@@ -143,7 +171,7 @@ from nexus_sdk.nexus_client import MockNexusClient
 
 @pytest.mark.asyncio
 async def test_my_function():
-    mock_client = MockNexusClient()
+    mock_client = MockNexusClient(backend="ollama")
 
     # Call your function that uses the client
     result = await my_function_that_uses_client(mock_client)
@@ -158,60 +186,26 @@ async def test_my_function():
 
 ## API Reference
 
-### NexusClient
-
-#### Constructor
+### NexusOllamaClient & NexusMLXClient
 
 ```python
-NexusClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
+NexusOllamaClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
+NexusMLXClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 ```
 
-- `base_url`: Base URL of the Nexus API (e.g., "http://localhost:8000")
-- `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`)
-- `timeout`: Request timeout in seconds (default: 10.0)
+The SDK exposes two concrete HTTP clients. Choose the class that matches the backend you want to reach:
 
-#### Methods
+- `base_url`: Base URL of the Nexus API (e.g., "http://localhost:8000").
+- `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`).
+- `timeout`: Request timeout in seconds (default: 10.0).
 
-##### `bind_tools(tools: Sequence[Any]) -> NexusClient`
+Both classes share the same API surface:
 
-Registers tool definitions for upcoming requests. Returns `self` so calls can be chained.
+- `bind_tools(tools: Sequence[Any]) -> Self`: store tool definitions to include in subsequent invocations.
+- `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`: send a chat completion request. `messages` accepts LangChain objects, dicts, or strings. Additional keyword arguments (e.g., `temperature`, `max_tokens`) are forwarded verbatim to Nexus.
+- `aclose() -> None`: close the underlying `httpx.AsyncClient`. They support async context management for automatic cleanup.
 
-##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
-
-Invokes the LLM with LangChain messages or dict payloads and returns the response in the configured format.
-
-**Parameters:**
-- `messages`: LangChain message objects, list of role/content dicts, or a pre-built payload dict.
-- `**kwargs`: Reserved for future options; ignored for compatibility with LangChain's signature.
-
-**Returns:**
-- Raw dictionary response (default).
-- `LangChainResponse` object when `response_format="langchain"`.
-
-**Raises:**
-- `httpx.TimeoutException`: If request times out.
-- `httpx.HTTPStatusError`: For HTTP error responses.
-
-##### `aclose() -> None`
-
-Closes the underlying HTTP client connection pool. Should be called when the client is no longer needed to free up resources.
-
-**Usage with context manager:**
-
-```python
-async with NexusClient(base_url="http://localhost:8000") as client:
-    response = await client.invoke({"model": "your-model-id", "messages": "Hello"})
-```
-
-**Manual cleanup:**
-
-```python
-client = NexusClient(base_url="http://localhost:8000")
-try:
-    response = await client.invoke({"model": "your-model-id", "messages": "Hello"})
-finally:
-    await client.aclose()
-```
+Both clients automatically attach the appropriate backend hint, so requests are routed correctly without extra parameters.
 
 ### MockNexusClient
 
@@ -221,6 +215,7 @@ finally:
 MockNexusClient(
     response_format: str = "dict",
     strategy: MockResponseStrategy | None = None,
+    backend: str,
 )
 ```
 
@@ -232,13 +227,13 @@ Mirrors the real client by storing bound tools and returning `self`.
 
 ##### `invoke(messages: Any, **kwargs: Any) -> Union[Dict[str, Any], LangChainResponse]`
 
-Returns a deterministic mock response and records the serialized payload. Mirrors the `response_format` behavior of `NexusClient`. The response is controlled by the configured strategy (defaults to `SimpleResponseStrategy`).
+Returns a deterministic mock response and records the serialized payload. Mirrors the behaviour of the real clients. Provide the backend you want to simulate via the constructor, or override per call using `invoke(..., backend="...")`. The response is controlled by the configured strategy (defaults to `SimpleResponseStrategy`).
 
 #### Properties
 
 ##### `invocations: List[Dict[str, Any]]`
 
-List of serialized payloads passed to `invoke()` calls. Useful for testing.
+List of serialized payloads passed to `invoke()` calls. Useful for testing. When a backend hint is active, the payload includes a `backend` field.
 
 ### LangChainResponse
 

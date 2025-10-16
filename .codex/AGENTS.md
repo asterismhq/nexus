@@ -24,6 +24,7 @@
 - `tests/unit/test_dependencies.py`: tests for dependency injection system.
 - `tests/intg/test_chat_completions.py`: integration tests demonstrating `app.dependency_overrides` for mocking.
 - `tests/`: unit/intg/e2e layout kept light so additional checks can drop in without restructuring.
+- `sdk/nexus_sdk/nexus_client/`: SDK clients; `ollama_client.py`/`mlx_client.py` provide backend-specific facades used by the Python SDK.
 
 ## Tooling Snapshot
 - `justfile`: run/lint/test/build tasks used locally and in CI.
@@ -67,3 +68,10 @@ The `/v1/chat/completions` endpoint forwards all top-level parameters other than
 selected backend client. Streaming responses follow the OpenAI Chat Completions SSE contract, and non-streaming responses
 emit the OpenAI-compatible `chat.completion` schema. Tests in `tests/intg/test_chat_completions.py` assert this contract, so
 update them whenever the request schema changes.
+
+## SDK Backend Selection
+
+The Python SDK now exposes backend-aware entry points:
+
+- `NexusOllamaClient` / `NexusMLXClient` live in `sdk/nexus_sdk/nexus_client/ollama_client.py` and `mlx_client.py` respectively and pin the backend hint automatically.
+- `MockNexusClient` requires an explicit `backend` value (e.g., `"ollama"`, `"mlx"`) so tests mirror real routing and still supports per-call overrides.
