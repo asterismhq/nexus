@@ -22,7 +22,7 @@ async def invoke_chat(
 ) -> ChatInvokeResponse:
     """Invoke the configured LLM backend with the provided input."""
     request_payload = request.input_data
-    backend_options = request_payload.model_dump()
+    backend_options = request_payload.model_dump(exclude_unset=True, exclude_none=True)
     messages = backend_options.pop("input", "")
     if isinstance(messages, str):
         messages = [{"role": "user", "content": messages}]
