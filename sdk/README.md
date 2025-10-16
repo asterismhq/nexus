@@ -32,7 +32,12 @@ async def main():
         response_format="langchain",
     )
 
-    response = await client.invoke([HumanMessage(content="Hello, world!")])
+    response = await client.invoke(
+        {
+            "model": "your-model-id",
+            "messages": [HumanMessage(content="Hello, world!")],
+        }
+    )
     print(response.content)
 
 asyncio.run(main())
@@ -48,7 +53,12 @@ async def main():
     client = NexusClient(base_url="https://your-nexus-instance.com")
     client.bind_tools([{"name": "calculator"}])
 
-    response = await client.invoke([{"role": "user", "content": "What is 2+2?"}])
+    response = await client.invoke(
+        {
+            "model": "your-model-id",
+            "messages": [{"role": "user", "content": "What is 2+2?"}],
+        }
+    )
     print(response)
 
 asyncio.run(main())
@@ -57,7 +67,14 @@ asyncio.run(main())
 ### Dict Payloads Are Still Supported
 
 ```python
-response = await client.invoke({"input": "Explain quantum computing", "temperature": 0.7})
+response = await client.invoke(
+    {
+        "model": "your-model-id",
+        "messages": "Explain quantum computing",
+        "temperature": 0.7,
+        "stream": False,
+    }
+)
 ```
 
 ### Mock Client for Testing
@@ -71,7 +88,12 @@ async def main():
         [{"name": "search"}]
     )
 
-    response = await client.invoke([{"role": "user", "content": "search headlines"}])
+    response = await client.invoke(
+        {
+            "model": "mock-model",
+            "messages": [{"role": "user", "content": "search headlines"}],
+        }
+    )
     print(response.content)
     print(client.invocations[-1])
 
@@ -178,7 +200,7 @@ Closes the underlying HTTP client connection pool. Should be called when the cli
 
 ```python
 async with NexusClient(base_url="http://localhost:8000") as client:
-    response = await client.invoke({"input": "Hello"})
+    response = await client.invoke({"model": "your-model-id", "messages": "Hello"})
 ```
 
 **Manual cleanup:**
@@ -186,7 +208,7 @@ async with NexusClient(base_url="http://localhost:8000") as client:
 ```python
 client = NexusClient(base_url="http://localhost:8000")
 try:
-    response = await client.invoke({"input": "Hello"})
+    response = await client.invoke({"model": "your-model-id", "messages": "Hello"})
 finally:
     await client.aclose()
 ```

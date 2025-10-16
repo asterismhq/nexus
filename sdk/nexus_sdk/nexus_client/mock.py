@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+import uuid
 from typing import Any, Dict, List, Sequence
 
 from .client import _validate_response_format
@@ -45,9 +47,10 @@ class MockNexusClient:
         payload = self._prepare_payload(input_data)
         self.invocations.append(payload)
         response = self._resolve_response(payload)
+        wire_response = self._build_openai_response(payload, response)
         if self.response_format == "langchain":
-            return self._build_langchain_response(response)
-        return self._build_dict_response(response)
+            return self._build_langchain_response(wire_response)
+        return wire_response
 
     def _resolve_response(self, payload: Dict[str, Any]) -> MockResponse:
         strategy = self._strategy
@@ -66,37 +69,72 @@ class MockNexusClient:
             return MockResponse(content=value["content"], tool_calls=tool_calls)
         return MockResponse(content=value)
 
-    def _build_langchain_response(self, response: MockResponse) -> LangChainResponse:
+    def _build_langchain_response(
+        self, wire_response: Dict[str, Any]
+    ) -> LangChainResponse:
+        choices = wire_response.get("choices", [])
+        choice = choices[0] if choices else {}
+        message = choice.get("message", {}) if isinstance(choice, dict) else {}
+        tool_calls = message.get("tool_calls") or []
+
+        return LangChainResponse(
+            content=message.get("content"),
+            tool_calls=list(tool_calls),
+            raw_output=choice,
+            raw_response=wire_response,
+        )
+
+    def _build_openai_response(
+        self, payload: Dict[str, Any], response: MockResponse
+    ) -> Dict[str, Any]:
         message_payload = {
+            "role": "assistant",
             "content": response.content,
             "tool_calls": list(response.tool_calls),
         }
-        return LangChainResponse(
-            content=response.content,
-            tool_calls=list(response.tool_calls),
-            raw_output={"message": message_payload},
-            raw_response={"output": {"message": message_payload}},
-        )
 
-    def _build_dict_response(self, response: MockResponse) -> Dict[str, Any]:
-        result: Dict[str, Any] = {"output": response.content}
-        if response.tool_calls:
-            result["tool_calls"] = list(response.tool_calls)
-        return result
+        choice = {
+            "index": 0,
+            "message": message_payload,
+            "finish_reason": "stop",
+        }
+
+        return {
+            "id": f"chatcmpl-mock-{uuid.uuid4().hex[:8]}",
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": payload.get("model", "mock-model"),
+            "choices": [choice],
+            "usage": {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+            },
+        }
 
     def _prepare_payload(self, input_data: Any) -> Dict[str, Any]:
         if isinstance(input_data, dict):
             payload = dict(input_data)
-            if "input_data" in payload:
-                payload = payload["input_data"]
-            if self._tools and "tools" not in payload:
-                payload["tools"] = self._tools
-            return payload
+        else:
+            payload = {"messages": self._serialize_messages(input_data)}
 
-        serialized = self._serialize_messages(input_data)
-        payload: Dict[str, Any] = {"input": serialized}
-        if self._tools:
+        if "input_data" in payload:
+            nested = payload.pop("input_data")
+            if isinstance(nested, dict):
+                payload.update(nested)
+
+        if "messages" not in payload and "input" in payload:
+            payload["messages"] = payload.pop("input")
+
+        payload.setdefault("model", "mock-model")
+
+        normalized_messages = self._ensure_message_list(payload.get("messages", []))
+        payload["messages"] = normalized_messages
+        payload.setdefault("input", normalized_messages)
+
+        if self._tools and "tools" not in payload:
             payload["tools"] = self._tools
+
         return payload
 
     def _serialize_messages(self, messages: Any) -> Any:
@@ -119,6 +157,31 @@ class MockNexusClient:
             else:
                 serialized.append({"role": "user", "content": str(msg)})
         return serialized
+
+    def _ensure_message_list(self, messages: Any) -> List[Dict[str, Any]]:
+        if isinstance(messages, str):
+            return [{"role": "user", "content": messages}]
+        if not isinstance(messages, list):
+            return [{"role": "user", "content": str(messages)}]
+        normalized: List[Dict[str, Any]] = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                normalized.append(msg)
+                continue
+            if hasattr(msg, "type") and hasattr(msg, "content"):
+                normalized.append(
+                    {
+                        "role": getattr(msg, "type"),
+                        "content": getattr(msg, "content"),
+                        "additional_kwargs": getattr(msg, "additional_kwargs", None)
+                        or None,
+                    }
+                )
+                if normalized[-1]["additional_kwargs"] is None:
+                    normalized[-1].pop("additional_kwargs")
+                continue
+            normalized.append({"role": "user", "content": str(msg)})
+        return normalized
 
 
 # For static type checking

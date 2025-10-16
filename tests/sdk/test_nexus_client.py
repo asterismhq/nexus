@@ -29,9 +29,13 @@ async def test_stl_conn_client_invoke_with_dict_payload():
         mock_client_instance.post.return_value = mock_response
         mock_client_class.return_value = mock_client_instance
         client = NexusClient(base_url="http://example.com")
-        result = await client.invoke({"input": "test"})
+        result = await client.invoke({"model": "test-model", "messages": "test"})
         mock_client_instance.post.assert_called_once_with(
-            "/api/chat/invoke", json={"input_data": {"input": "test"}}
+            "/v1/chat/completions",
+            json={
+                "model": "test-model",
+                "messages": [{"role": "user", "content": "test"}],
+            },
         )
         assert result == {"result": "test"}
 
@@ -53,18 +57,17 @@ async def test_stl_conn_client_serializes_langchain_messages():
             "fallback",
         ]
 
-        await client.invoke(messages)
+        await client.invoke({"model": "test-model", "messages": messages})
 
         mock_client_instance.post.assert_called_once_with(
-            "/api/chat/invoke",
+            "/v1/chat/completions",
             json={
-                "input_data": {
-                    "input": [
-                        {"role": "user", "content": "hello"},
-                        {"role": "assistant", "content": "hi"},
-                        {"role": "user", "content": "fallback"},
-                    ]
-                }
+                "model": "test-model",
+                "messages": [
+                    {"role": "user", "content": "hello"},
+                    {"role": "assistant", "content": "hi"},
+                    {"role": "user", "content": "fallback"},
+                ],
             },
         )
 
@@ -81,15 +84,19 @@ async def test_stl_conn_client_bind_tools_adds_tools():
         client = NexusClient(base_url="http://example.com")
 
         client.bind_tools([{"name": "calculator"}])
-        await client.invoke([{"role": "user", "content": "compute"}])
+        await client.invoke(
+            {
+                "model": "test-model",
+                "messages": [{"role": "user", "content": "compute"}],
+            }
+        )
 
         mock_client_instance.post.assert_called_once_with(
-            "/api/chat/invoke",
+            "/v1/chat/completions",
             json={
-                "input_data": {
-                    "input": [{"role": "user", "content": "compute"}],
-                    "tools": [{"name": "calculator"}],
-                }
+                "model": "test-model",
+                "messages": [{"role": "user", "content": "compute"}],
+                "tools": [{"name": "calculator"}],
             },
         )
 
@@ -98,12 +105,22 @@ async def test_stl_conn_client_bind_tools_adds_tools():
 async def test_stl_conn_client_invoke_langchain_response():
     mock_response = Mock()
     mock_response.json.return_value = {
-        "output": {
-            "message": {
-                "content": "Hello from Stella Connector",
-                "tool_calls": [{"type": "test"}],
+        "id": "chatcmpl-test",
+        "object": "chat.completion",
+        "created": 123,
+        "model": "test-model",
+        "choices": [
+            {
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "Hello from Stella Connector",
+                    "tool_calls": [{"type": "test"}],
+                },
+                "finish_reason": "stop",
             }
-        }
+        ],
+        "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }
     mock_response.raise_for_status.return_value = None
 
@@ -113,7 +130,9 @@ async def test_stl_conn_client_invoke_langchain_response():
         mock_client_class.return_value = mock_client_instance
         client = NexusClient(base_url="http://example.com", response_format="langchain")
 
-        result = await client.invoke([{"role": "user", "content": "test"}])
+        result = await client.invoke(
+            {"model": "test-model", "messages": [{"role": "user", "content": "test"}]}
+        )
 
         assert isinstance(result, LangChainResponse)
         assert result.content == "Hello from Stella Connector"
@@ -147,7 +166,9 @@ async def test_stl_conn_client_aclose():
 @pytest.mark.asyncio
 async def test_mock_client_langchain_response():
     client = MockNexusClient(response_format="langchain")
-    result = await client.invoke([{"role": "user", "content": "test"}])
+    result = await client.invoke(
+        {"model": "mock", "messages": [{"role": "user", "content": "test"}]}
+    )
 
     assert isinstance(result, LangChainResponse)
     assert result.content == "This is a mock response from Nexus."
@@ -159,14 +180,20 @@ async def test_mock_client_records_serialized_invocations_with_tools():
     client = MockNexusClient()
     client.bind_tools([{"name": "web_search"}])
 
-    await client.invoke([_FakeLangChainMessage("user", "go find", {"foo": "bar"})])
+    await client.invoke(
+        {
+            "model": "mock",
+            "messages": [_FakeLangChainMessage("user", "go find", {"foo": "bar"})],
+        }
+    )
 
-    assert client.invocations[-1] == {
-        "input": [
-            {"role": "user", "content": "go find", "additional_kwargs": {"foo": "bar"}}
-        ],
-        "tools": [{"name": "web_search"}],
-    }
+    recorded = client.invocations[-1]
+    assert recorded["model"] == "mock"
+    assert recorded["messages"] == [
+        {"role": "user", "content": "go find", "additional_kwargs": {"foo": "bar"}}
+    ]
+    assert recorded["input"] == recorded["messages"]
+    assert recorded["tools"] == [{"name": "web_search"}]
 
 
 def test_mock_client_rejects_unknown_response_format():
@@ -182,7 +209,9 @@ async def test_mock_client_langchain_response_with_tools():
     )
     client = MockNexusClient(response_format="langchain", strategy=strategy)
     client.bind_tools([{"name": "calculator"}])
-    result = await client.invoke([{"role": "user", "content": "test"}])
+    result = await client.invoke(
+        {"model": "mock", "messages": [{"role": "user", "content": "test"}]}
+    )
 
     assert isinstance(result, LangChainResponse)
     assert result.content == {"result": "ok"}
