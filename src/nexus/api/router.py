@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import time
 import uuid
@@ -100,11 +101,15 @@ async def _stream_chat_completions(
             ],
         }
 
-    stream_iterator = await llm_client.stream(
+    stream_result = llm_client.stream(
         messages,
         model=model_name,
         **backend_options,
     )
+    if inspect.iscoroutine(stream_result):
+        stream_iterator = await stream_result
+    else:
+        stream_iterator = stream_result
 
     try:
         async for chunk in stream_iterator:

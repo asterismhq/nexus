@@ -62,8 +62,8 @@ async def test_vllm_client_stream_yields_parsed_chunks(monkeypatch) -> None:
     messages = "Stream this"
 
     chunks = [
-        "data: {\"choices\":[{\"delta\":{\"content\":\"hello\"}}]}\n\n",
-        "data: {\"choices\":[{\"delta\":{}}]}\n\n",
+        'data: {"choices":[{"delta":{"content":"hello"}}]}\n\n',
+        'data: {"choices":[{"delta":{}}]}\n\n',
         "data: [DONE]\n\n",
     ]
 
@@ -96,7 +96,7 @@ async def test_vllm_client_stream_yields_parsed_chunks(monkeypatch) -> None:
 
     monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncClient)
 
-    stream = await client.stream(messages)
+    stream = client.stream(messages)
     results = []
     async for chunk in stream:
         results.append(chunk)

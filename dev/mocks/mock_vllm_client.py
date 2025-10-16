@@ -20,8 +20,8 @@ class MockVLLMClient(LLMClientProtocol):
             "model": model_name,
             "messages": messages,
             "tools": list(self.bound_tools),
-            "kwargs": kwargs,
             "stream": False,
+            **kwargs,
         }
         self.invocations.append(payload)
         return {"choices": [{"message": {"content": "Mock vLLM response"}}]}
@@ -34,8 +34,8 @@ class MockVLLMClient(LLMClientProtocol):
             "model": model_name,
             "messages": messages,
             "tools": list(self.bound_tools),
-            "kwargs": kwargs,
             "stream": True,
+            **kwargs,
         }
         self.invocations.append(payload)
 

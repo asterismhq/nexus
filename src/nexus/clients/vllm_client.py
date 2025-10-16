@@ -18,25 +18,30 @@ class VLLMClient(LLMClientProtocol):
         self._settings = settings or VLLMSettings()
         self._tools: list[Any] = []
 
-    async def invoke(self, messages: Any, **kwargs: Any) -> Any:
+    def _prepare_request(
+        self, messages: Any, stream: bool, **kwargs: Any
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
         model_name = kwargs.pop("model", self._settings.model)
         generation_kwargs = {**self._settings.to_model_kwargs(), **kwargs}
         if self._tools:
             generation_kwargs["tools"] = self._tools
 
-        base_url = self._settings.require_host()
         payload: dict[str, Any] = {
             "model": model_name,
             "messages": messages,
-            "stream": False,
+            "stream": stream,
         }
         payload.update(generation_kwargs)
 
         headers = self._settings.build_headers()
+        return payload, headers
+
+    async def invoke(self, messages: Any, **kwargs: Any) -> Any:
+        payload, headers = self._prepare_request(messages, stream=False, **kwargs)
 
         async with httpx.AsyncClient(timeout=self._settings.timeout) as client:
             response = await client.post(
-                f"{base_url}/v1/chat/completions",
+                f"{self._settings.require_host()}/v1/chat/completions",
                 json=payload,
                 headers=headers,
             )
@@ -46,41 +51,25 @@ class VLLMClient(LLMClientProtocol):
     async def stream(
         self, messages: Any, **kwargs: Any
     ) -> AsyncIterator[dict[str, Any]]:
-        model_name = kwargs.pop("model", self._settings.model)
-        generation_kwargs = {**self._settings.to_model_kwargs(), **kwargs}
-        if self._tools:
-            generation_kwargs["tools"] = self._tools
-
-        base_url = self._settings.require_host()
-        payload: dict[str, Any] = {
-            "model": model_name,
-            "messages": messages,
-            "stream": True,
-        }
-        payload.update(generation_kwargs)
-
-        headers = self._settings.build_headers()
+        payload, headers = self._prepare_request(messages, stream=True, **kwargs)
 
         async with httpx.AsyncClient(timeout=self._settings.timeout) as client:
             async with client.stream(
                 "POST",
-                f"{base_url}/v1/chat/completions",
+                f"{self._settings.require_host()}/v1/chat/completions",
                 json=payload,
                 headers=headers,
             ) as response:
                 response.raise_for_status()
 
-                async def _generator() -> AsyncIterator[dict[str, Any]]:
-                    async for line in response.aiter_lines():
-                        if not line:
-                            continue
-                        if line.startswith("data:"):
-                            data_text = line[len("data:") :].strip()
-                            if data_text == "[DONE]":
-                                break
-                            yield json.loads(data_text)
-
-                return _generator()
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data:"):
+                        data_text = line[len("data:") :].strip()
+                        if data_text == "[DONE]":
+                            break
+                        yield json.loads(data_text)
 
     def bind_tools(self, tools: list[Any]) -> "VLLMClient":
         self._tools = tools
