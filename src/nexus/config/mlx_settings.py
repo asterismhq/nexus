@@ -19,7 +19,7 @@ class MLXSettings(BaseSettings):
     )
 
     host: AnyHttpUrl = Field(
-        ...,
+        default="http://localhost:8080",
         alias="NEXUS_MLX_HOST",
         description="Remote MLX server base URL.",
     )

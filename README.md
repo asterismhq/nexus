@@ -112,4 +112,4 @@ The `MockNexusClient` supports pluggable response strategies for testing, includ
   * **`PatternMatchingStrategy`**: For regex-triggered responses.
   * **`CallbackResponseStrategy`**: For imperative control over mock content.
 
-See [`sdk/README.md`](https://www.google.com/search?q=sdk/README.md) for detailed documentation, installation instructions, and usage examples.
+See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
