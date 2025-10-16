@@ -17,7 +17,7 @@ class MockResponse:
 
 
 class MockResponseStrategy(ABC):
-    """Strategy interface for `MockStlConnClient` response generation."""
+    """Strategy interface for `MockNexusClient` response generation."""
 
     def should_handle(self, payload: Dict[str, Any]) -> bool:
         """Return True when the strategy is able to handle the payload."""

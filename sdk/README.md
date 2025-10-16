@@ -45,7 +45,7 @@ import asyncio
 from nexus_sdk.nexus_client import NexusClient
 
 async def main():
-    client = NexusClient(base_url="https://your-stl-conn-instance.com")
+    client = NexusClient(base_url="https://your-nexus-instance.com")
     client.bind_tools([{"name": "calculator"}])
 
     response = await client.invoke([{"role": "user", "content": "What is 2+2?"}])
