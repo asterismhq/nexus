@@ -11,7 +11,8 @@ from fastapi import Depends
 
 from .clients.mlx_client import MLXClient
 from .clients.ollama_client import OllamaClient
-from .config import MLXSettings, NexusSettings, OllamaSettings
+from .clients.vllm_client import VLLMClient
+from .config import MLXSettings, NexusSettings, OllamaSettings, VLLMSettings
 from .protocols.llm_client_protocol import LLMClientProtocol
 
 LOGGER = logging.getLogger(__name__)
@@ -31,6 +32,11 @@ def _create_mlx_client(_settings: NexusSettings) -> LLMClientProtocol:
     return MLXClient(MLXSettings())
 
 
+def _create_vllm_client(_settings: NexusSettings) -> LLMClientProtocol:
+    """Create a vLLM client instance."""
+    return VLLMClient(VLLMSettings())
+
+
 def _create_mock_ollama_client(_settings: NexusSettings) -> LLMClientProtocol:
     """Create a mock Ollama client instance."""
     mock_class = _import_mock_class("dev.mocks.mock_ollama_client.MockOllamaClient")
@@ -41,6 +47,12 @@ def _create_mock_mlx_client(_settings: NexusSettings) -> LLMClientProtocol:
     """Create a mock MLX client instance."""
     mock_class = _import_mock_class("dev.mocks.mock_mlx_client.MockMLXClient")
     return mock_class(MLXSettings())
+
+
+def _create_mock_vllm_client(_settings: NexusSettings) -> LLMClientProtocol:
+    """Create a mock vLLM client instance."""
+    mock_class = _import_mock_class("dev.mocks.mock_vllm_client.MockVLLMClient")
+    return mock_class(VLLMSettings())
 
 
 def _import_mock_class(dotted_path: str) -> Type[LLMClientProtocol]:
@@ -55,11 +67,13 @@ def _import_mock_class(dotted_path: str) -> Type[LLMClientProtocol]:
 CLIENT_FACTORIES: dict[str, ClientFactory] = {
     "ollama": _create_ollama_client,
     "mlx": _create_mlx_client,
+    "vllm": _create_vllm_client,
 }
 
 MOCK_FACTORIES: dict[str, MockFactory] = {
     "ollama": _create_mock_ollama_client,
     "mlx": _create_mock_mlx_client,
+    "vllm": _create_mock_vllm_client,
 }
 
 
@@ -93,9 +107,12 @@ def get_llm_client(
     backend = (settings.llm_backend or "ollama").lower()
 
     # Determine if we should use a mock client
-    use_mock = (backend == "ollama" and settings.use_mock_ollama) or (
-        backend == "mlx" and settings.use_mock_mlx
-    )
+    mock_flags = {
+        "ollama": settings.use_mock_ollama,
+        "mlx": settings.use_mock_mlx,
+        "vllm": settings.use_mock_vllm,
+    }
+    use_mock = mock_flags.get(backend, False)
 
     # Select the appropriate factory
     factory_registry = MOCK_FACTORIES if use_mock else CLIENT_FACTORIES

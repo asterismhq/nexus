@@ -7,6 +7,7 @@ from nexus_sdk.nexus_client import (
     MockNexusClient,
     NexusMLXClient,
     NexusOllamaClient,
+    NexusVLLMClient,
     SimpleResponseStrategy,
 )
 
@@ -28,6 +29,7 @@ class _FakeLangChainMessage:
     [
         (NexusOllamaClient, "ollama"),
         (NexusMLXClient, "mlx"),
+        (NexusVLLMClient, "vllm"),
     ],
 )
 async def test_backend_clients_invoke_with_dict_payload(
@@ -59,6 +61,7 @@ async def test_backend_clients_invoke_with_dict_payload(
     [
         (NexusOllamaClient, "ollama"),
         (NexusMLXClient, "mlx"),
+        (NexusVLLMClient, "vllm"),
     ],
 )
 async def test_backend_clients_serialize_langchain_messages(
@@ -101,6 +104,7 @@ async def test_backend_clients_serialize_langchain_messages(
     [
         (NexusOllamaClient, "ollama"),
         (NexusMLXClient, "mlx"),
+        (NexusVLLMClient, "vllm"),
     ],
 )
 async def test_backend_clients_bind_tools_adds_tools(
@@ -137,7 +141,7 @@ async def test_backend_clients_bind_tools_adds_tools(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client_cls",
-    [NexusOllamaClient, NexusMLXClient],
+    [NexusOllamaClient, NexusMLXClient, NexusVLLMClient],
 )
 async def test_backend_clients_langchain_response(
     client_cls: Type[Any],
@@ -181,7 +185,7 @@ async def test_backend_clients_langchain_response(
 
 @pytest.mark.parametrize(
     "client_cls",
-    [NexusOllamaClient, NexusMLXClient],
+    [NexusOllamaClient, NexusMLXClient, NexusVLLMClient],
 )
 def test_clients_reject_unknown_response_format(client_cls: Type[Any]) -> None:
     with pytest.raises(ValueError):
@@ -190,7 +194,7 @@ def test_clients_reject_unknown_response_format(client_cls: Type[Any]) -> None:
 
 @pytest.mark.parametrize(
     "client_cls",
-    [NexusOllamaClient, NexusMLXClient],
+    [NexusOllamaClient, NexusMLXClient, NexusVLLMClient],
 )
 def test_backend_clients_timeout_parameter(client_cls: Type[Any]) -> None:
     with patch(_BASE_CLIENT_PATH) as mock_client_class:
@@ -203,7 +207,7 @@ def test_backend_clients_timeout_parameter(client_cls: Type[Any]) -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "client_cls",
-    [NexusOllamaClient, NexusMLXClient],
+    [NexusOllamaClient, NexusMLXClient, NexusVLLMClient],
 )
 async def test_backend_clients_aclose(client_cls: Type[Any]) -> None:
     with patch(_BASE_CLIENT_PATH) as mock_client_class:

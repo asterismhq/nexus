@@ -5,6 +5,7 @@ from .mock import (
     MockResponseStrategy,
 )
 from .ollama_client import NexusOllamaClient
+from .vllm_client import NexusVLLMClient
 from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
@@ -26,4 +27,5 @@ __all__ = [
     "NexusMLXClient",
     "NexusOllamaClient",
     "NexusClientProtocol",
+    "NexusVLLMClient",
 ]

@@ -4,7 +4,7 @@ The Nexus SDK provides a Python client library for interacting with the Nexus AP
 
 ## Overview
 
-Nexus is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX). The SDK ships backend-aware clients—`NexusOllamaClient` and `NexusMLXClient`—so external applications can choose or pin a backend without manually shaping HTTP requests.
+Nexus is a FastAPI service that mediates LLM inference across multiple pluggable backends (Ollama, MLX, vLLM). The SDK ships backend-aware clients—`NexusOllamaClient`, `NexusMLXClient`, and `NexusVLLMClient`—so external applications can choose or pin a backend without manually shaping HTTP requests.
 
 ### Key Features
 
@@ -50,11 +50,11 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from nexus_sdk.nexus_client import NexusMLXClient
+from nexus_sdk.nexus_client import NexusVLLMClient
 
 
 async def main():
-    client = NexusMLXClient(base_url="https://your-nexus-instance.com")
+    client = NexusVLLMClient(base_url="https://your-nexus-instance.com")
     client.bind_tools([{"name": "calculator"}])
 
     response = await client.invoke(
@@ -186,14 +186,15 @@ async def test_my_function():
 
 ## API Reference
 
-### NexusOllamaClient & NexusMLXClient
+### NexusOllamaClient, NexusMLXClient & NexusVLLMClient
 
 ```python
 NexusOllamaClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 NexusMLXClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
+NexusVLLMClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 ```
 
-The SDK exposes two concrete HTTP clients. Choose the class that matches the backend you want to reach:
+The SDK exposes three concrete HTTP clients. Choose the class that matches the backend you want to reach:
 
 - `base_url`: Base URL of the Nexus API (e.g., "http://localhost:8000").
 - `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`).
