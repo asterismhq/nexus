@@ -1,4 +1,4 @@
-# Stella Connector Agent Notes
+# Nexus Agent Notes
 
 ## Overview
 - Minimal FastAPI template intended as a clean starting point for new services.
@@ -13,14 +13,14 @@
 ## First Steps When Creating a Real API
 1. Clone or copy the template and run `just setup` to install dependencies.
 2. Configure the desired LLM backend via environment variables or `AppSettings`.
-3. Extend `src/stl_conn/api/router.py` with domain routes using `Depends()` for dependency injection.
+3. Extend `src/nexus/api/router.py` with domain routes using `Depends()` for dependency injection.
 4. Register new LLM backends in `dependencies.py` by adding entries to `CLIENT_FACTORIES` and `MOCK_FACTORIES`.
 5. Update `.env.example` and documentation to reflect new environment variables or external services.
 
 ## Key Files
-- `src/stl_conn/dependencies.py`: FastAPI dependency providers using `Depends()` and factory pattern for client selection.
-- `src/stl_conn/api/router.py`: API routes with dependency injection via `Depends()`.
-- `src/stl_conn/api/main.py`: FastAPI app instantiation; attach new routers here.
+- `src/nexus/dependencies.py`: FastAPI dependency providers using `Depends()` and factory pattern for client selection.
+- `src/nexus/api/router.py`: API routes with dependency injection via `Depends()`.
+- `src/nexus/api/main.py`: FastAPI app instantiation; attach new routers here.
 - `tests/unit/test_dependencies.py`: tests for dependency injection system.
 - `tests/intg/test_chat_invoke.py`: integration tests demonstrating `app.dependency_overrides` for mocking.
 - `tests/`: unit/intg/e2e layout kept light so additional checks can drop in without restructuring.
@@ -39,7 +39,7 @@ This project leverages **FastAPI's native dependency injection** for maximum cla
 - **Extensible**: Factory pattern in `dependencies.py` allows easy registration of new LLM backends.
 
 ### Adding New LLM Clients
-1. Implement your client in `src/stl_conn/clients/`.
+1. Implement your client in `src/nexus/clients/`.
 2. Add factory functions in `dependencies.py`:
    ```python
    def _create_your_client(settings: AppSettings) -> YourClient:
@@ -82,7 +82,7 @@ The SDK (`nexus_sdk`) now ships LangChain-first ergonomics:
 ```python
 import asyncio
 from langchain_core.messages import HumanMessage
-from nexus_sdk.stl_conn_client import NexusClient
+from nexus_sdk.nexus_client import NexusClient
 
 async def main():
     client = NexusClient(
@@ -104,7 +104,7 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from nexus_sdk.stl_conn_client import MockNexusClient
+from nexus_sdk.nexus_client import MockNexusClient
 
 async def main():
     mock_client = MockNexusClient(response_format="langchain").bind_tools(

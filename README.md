@@ -135,7 +135,7 @@ Use this as a foundation for adding your own routes, dependencies, and persisten
 
 ## SDK
 
-This repository includes a Python SDK for interacting with the Stella Connector API. See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
+This repository includes a Python SDK for interacting with the Nexus API. See [`sdk/README.md`](sdk/README.md) for detailed documentation, installation instructions, and usage examples.
 
 ### LangChain Support (v1.2.0)
 

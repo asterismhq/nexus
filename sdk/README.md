@@ -24,7 +24,7 @@ Nexus is a FastAPI service that mediates LLM inference across multiple pluggable
 ```python
 import asyncio
 from langchain_core.messages import HumanMessage
-from nexus_sdk.stl_conn_client import NexusClient
+from nexus_sdk.nexus_client import NexusClient
 
 async def main():
     client = NexusClient(
@@ -42,7 +42,7 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from nexus_sdk.stl_conn_client import NexusClient
+from nexus_sdk.nexus_client import NexusClient
 
 async def main():
     client = NexusClient(base_url="https://your-stl-conn-instance.com")
@@ -64,7 +64,7 @@ response = await client.invoke({"input": "Explain quantum computing", "temperatu
 
 ```python
 import asyncio
-from nexus_sdk.stl_conn_client import MockNexusClient
+from nexus_sdk.nexus_client import MockNexusClient
 
 async def main():
     client = MockNexusClient(response_format="langchain").bind_tools(
@@ -83,7 +83,7 @@ asyncio.run(main())
 The mock client now accepts pluggable strategies so tests can precisely control the simulated output:
 
 ```python
-from nexus_sdk.stl_conn_client import (
+from nexus_sdk.nexus_client import (
     MockNexusClient,
     SequenceResponseStrategy,
     SimpleResponseStrategy,
@@ -117,7 +117,7 @@ Additional built-ins include `PatternMatchingStrategy` and `CallbackResponseStra
 
 ```python
 import pytest
-from nexus_sdk.stl_conn_client import MockNexusClient
+from nexus_sdk.nexus_client import MockNexusClient
 
 @pytest.mark.asyncio
 async def test_my_function():
@@ -144,7 +144,7 @@ async def test_my_function():
 NexusClient(base_url: str, response_format: str = "dict", timeout: float = 10.0)
 ```
 
-- `base_url`: Base URL of the Stella Connector API (e.g., "http://localhost:8000")
+- `base_url`: Base URL of the Nexus API (e.g., "http://localhost:8000")
 - `response_format`: Response format (`"dict"` for raw JSON, `"langchain"` for `LangChainResponse`)
 - `timeout`: Request timeout in seconds (default: 10.0)
 
