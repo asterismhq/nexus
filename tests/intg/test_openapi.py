@@ -17,11 +17,11 @@ async def test_openapi_json_endpoint(app: FastAPI, async_client):
     assert "info" in schema
     assert "paths" in schema
 
-    # Check that /api/chat/invoke is in the paths
-    assert "/api/chat/invoke" in schema["paths"]
+    # Check that /v1/chat/completions is in the paths
+    assert "/v1/chat/completions" in schema["paths"]
 
     # Check the schema for the endpoint
-    invoke_path = schema["paths"]["/api/chat/invoke"]
+    invoke_path = schema["paths"]["/v1/chat/completions"]
     assert "post" in invoke_path
 
     post_operation = invoke_path["post"]
@@ -34,7 +34,7 @@ async def test_openapi_json_endpoint(app: FastAPI, async_client):
     assert "application/json" in request_body["content"]
     schema_ref = request_body["content"]["application/json"]["schema"]
     assert "$ref" in schema_ref
-    assert schema_ref["$ref"] == "#/components/schemas/ChatInvokeRequest"
+    assert schema_ref["$ref"] == "#/components/schemas/ChatCompletionRequest"
 
     # Check that the response references the correct schema
     responses = post_operation["responses"]
@@ -44,7 +44,7 @@ async def test_openapi_json_endpoint(app: FastAPI, async_client):
     assert "application/json" in response_200["content"]
     resp_schema_ref = response_200["content"]["application/json"]["schema"]
     assert "$ref" in resp_schema_ref
-    assert resp_schema_ref["$ref"] == "#/components/schemas/ChatInvokeResponse"
+    assert resp_schema_ref["$ref"] == "#/components/schemas/ChatCompletionResponse"
 
 
 @pytest.mark.asyncio

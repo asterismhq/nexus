@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, AsyncIterator
 
 from ..config.ollama_settings import OllamaSettings
 from ..protocols.llm_client_protocol import LLMClientProtocol
@@ -26,14 +26,31 @@ class OllamaClient(LLMClientProtocol):
         self._tools: list[Any] = []
 
     async def invoke(self, messages: Any, **kwargs: Any) -> Any:
+        model_name = kwargs.pop("model", self._settings.model)
         payload: dict[str, Any] = {
-            "model": self._settings.model,
+            "model": model_name,
             "messages": messages,
         }
         if self._tools:
             payload["tools"] = self._tools
         payload.update(kwargs)
         return await self._client.chat(**payload)
+
+    async def stream(
+        self, messages: Any, **kwargs: Any
+    ) -> AsyncIterator[dict[str, Any]]:
+        model_name = kwargs.pop("model", self._settings.model)
+        payload: dict[str, Any] = {
+            "model": model_name,
+            "messages": messages,
+            "stream": True,
+        }
+        if self._tools:
+            payload["tools"] = self._tools
+        payload.update(kwargs)
+        stream = await self._client.chat(**payload)
+        async for chunk in stream:
+            yield chunk
 
     def bind_tools(self, tools: list[Any]) -> "OllamaClient":
         self._tools = tools

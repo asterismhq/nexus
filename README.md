@@ -19,7 +19,7 @@
 │   │   └── test_dependencies.py
 │   ├── intg/
 │   │   ├── test_api.py
-│   │   └── test_chat_invoke.py
+│   │   └── test_chat_completions.py
 │   └── e2e/
 │       └── api/
 │           └── test_health.py
@@ -65,25 +65,28 @@ Visit `http://127.0.0.1:8000/docs` to access the automatically generated interac
 GET /health -> {"status": "ok"}
 ```
 
-### Chat Invocation
+### Chat Completions
 
 ```http
-POST /api/chat/invoke
+POST /v1/chat/completions
 Content-Type: application/json
 
 {
-  "input_data": {
-    "input": "Explain quantum computing in simple terms",
-    "temperature": 0.5,
-    "max_tokens": 1024,
-    "stream": false
-  }
+  "model": "your-model-id",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "Explain quantum computing in simple terms"}
+  ],
+  "temperature": 0.5,
+  "max_tokens": 1024,
+  "stream": false
 }
 ```
 
-All keys nested under `input_data` other than `input` are transparently forwarded to the active LLM backend. This allows you to
-leverage backend-specific options (e.g., `temperature`, `max_tokens`, `top_p`) without changing the API surface. Any new
-parameters introduced by future backends are automatically passed through.
+Top-level parameters other than `model` and `messages` are forwarded verbatim to the active LLM backend, so you can tune
+backend-specific options (e.g., `temperature`, `max_tokens`, `top_p`) without altering the API surface. Setting `stream: true`
+switches the response to Server-Sent Events (SSE) that follow the OpenAI Chat Completions streaming format. Non-streaming
+responses adopt the OpenAI-compatible schema (`chat.completion` object with `choices` and `usage`).
 
 ## 🏗️ Dependency Injection
 

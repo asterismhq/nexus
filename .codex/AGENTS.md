@@ -22,7 +22,7 @@
 - `src/nexus/api/router.py`: API routes with dependency injection via `Depends()`.
 - `src/nexus/api/main.py`: FastAPI app instantiation; attach new routers here.
 - `tests/unit/test_dependencies.py`: tests for dependency injection system.
-- `tests/intg/test_chat_invoke.py`: integration tests demonstrating `app.dependency_overrides` for mocking.
+- `tests/intg/test_chat_completions.py`: integration tests demonstrating `app.dependency_overrides` for mocking.
 - `tests/`: unit/intg/e2e layout kept light so additional checks can drop in without restructuring.
 
 ## Tooling Snapshot
@@ -63,6 +63,7 @@ def test_with_mock(app: FastAPI, async_client):
 
 ## LLM Parameter Forwarding
 
-The `/api/chat/invoke` endpoint now forwards every key under `input_data` except `input` directly to the selected backend client.
-Avoid filtering or renaming these keys in router logic—leave interpretation to the backend implementation. Tests in
-`tests/intg/test_chat_invoke.py` assert this contract, so update them whenever the request schema changes.
+The `/v1/chat/completions` endpoint forwards all top-level parameters other than `model` and `messages` directly to the
+selected backend client. Streaming responses follow the OpenAI Chat Completions SSE contract, and non-streaming responses
+emit the OpenAI-compatible `chat.completion` schema. Tests in `tests/intg/test_chat_completions.py` assert this contract, so
+update them whenever the request schema changes.

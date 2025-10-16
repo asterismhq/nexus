@@ -39,9 +39,7 @@ class NexusClient:
 
     async def invoke(self, input_data: Any, **_: Any) -> Any:
         payload = self._prepare_payload(input_data)
-        response = await self._client.post(
-            "/api/chat/invoke", json={"input_data": payload}
-        )
+        response = await self._client.post("/v1/chat/completions", json=payload)
         response.raise_for_status()
         result = response.json()
         return self._format_response(result)
@@ -52,24 +50,25 @@ class NexusClient:
         return result
 
     def _to_langchain_response(self, result: Dict[str, Any]) -> LangChainResponse:
-        output = result.get("output")
-
         content: Any = ""
         tool_calls: Any = []
 
-        if isinstance(output, dict):
-            message = output.get("message")
-            if isinstance(message, dict):
-                content = message.get("content", "")
-                tool_calls = message.get("tool_calls", [])
-            elif message is not None:
-                content = message
-            elif "content" in output:
-                content = output.get("content", "")
-            else:
-                content = output
-        elif output is not None:
-            content = output
+        choices = result.get("choices")
+        if isinstance(choices, list) and choices:
+            first_choice = choices[0]
+            if isinstance(first_choice, dict):
+                message = first_choice.get("message")
+                if isinstance(message, dict):
+                    content = message.get("content", "")
+                    tool_calls = message.get("tool_calls", [])
+                elif message is not None:
+                    content = message
+                elif "delta" in first_choice:
+                    delta = first_choice.get("delta", {})
+                    if isinstance(delta, dict):
+                        content = delta.get("content", "")
+                else:
+                    content = first_choice
 
         if isinstance(tool_calls, list):
             normalized_tool_calls = tool_calls
@@ -78,10 +77,12 @@ class NexusClient:
         else:
             normalized_tool_calls = []
 
+        raw_output = choices[0] if isinstance(choices, list) and choices else result
+
         return LangChainResponse(
             content=content,
             tool_calls=normalized_tool_calls,
-            raw_output=output,
+            raw_output=raw_output,
             raw_response=result,
         )
 
@@ -96,17 +97,28 @@ class NexusClient:
         """
         if isinstance(input_data, dict):
             payload = dict(input_data)
-            # Support callers that already wrap data as {"input": ...}
-            if "input_data" in payload:
-                payload = payload["input_data"]
-            if self._tools and "tools" not in payload:
-                payload["tools"] = self._tools
-            return payload
+        else:
+            payload = {"messages": self._serialize_messages(input_data)}
 
-        serialized_messages = self._serialize_messages(input_data)
-        payload: Dict[str, Any] = {"input": serialized_messages}
-        if self._tools:
+        if "input_data" in payload:
+            nested = payload.pop("input_data")
+            if isinstance(nested, dict):
+                payload.update(nested)
+
+        if "messages" not in payload:
+            if "input" in payload:
+                payload["messages"] = self._ensure_message_list(payload.pop("input"))
+            else:
+                raise ValueError("messages must be provided for chat completions")
+
+        if "model" not in payload:
+            raise ValueError("model must be specified for chat completions")
+
+        payload["messages"] = self._ensure_message_list(payload["messages"])
+
+        if self._tools and "tools" not in payload:
             payload["tools"] = self._tools
+
         return payload
 
     def _serialize_messages(self, messages: Any) -> Any:
@@ -129,6 +141,27 @@ class NexusClient:
             else:
                 serialized.append({"role": "user", "content": str(msg)})
         return serialized
+
+    def _ensure_message_list(self, messages: Any) -> List[Dict[str, Any]]:
+        if isinstance(messages, str):
+            return [{"role": "user", "content": messages}]
+        if not isinstance(messages, list):
+            return [{"role": "user", "content": str(messages)}]
+        normalized: List[Dict[str, Any]] = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                normalized.append(msg)
+                continue
+            if hasattr(msg, "type") and hasattr(msg, "content"):
+                normalized.append(
+                    {
+                        "role": getattr(msg, "type"),
+                        "content": getattr(msg, "content"),
+                    }
+                )
+                continue
+            normalized.append({"role": "user", "content": str(msg)})
+        return normalized
 
     async def aclose(self) -> None:
         """Close the underlying HTTP client."""
