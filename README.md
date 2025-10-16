@@ -55,6 +55,10 @@ Environment variables are loaded from `.env` (managed by `just setup`):
 
 The service provides the following endpoints:
 
+### Interactive API Documentation
+
+Visit `http://127.0.0.1:8000/docs` to access the automatically generated interactive API documentation powered by FastAPI and OpenAPI. This provides a user-friendly interface to explore and test the API endpoints, including detailed request/response schemas.
+
 ### Health Check
 
 ```http
