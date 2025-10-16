@@ -130,7 +130,6 @@ class MockNexusClient:
 
         normalized_messages = self._ensure_message_list(payload.get("messages", []))
         payload["messages"] = normalized_messages
-        payload.setdefault("input", normalized_messages)
 
         if self._tools and "tools" not in payload:
             payload["tools"] = self._tools

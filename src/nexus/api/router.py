@@ -100,7 +100,7 @@ async def _stream_chat_completions(
             ],
         }
 
-    stream_iterator = await llm_client.stream(
+    stream_iterator = llm_client.stream(
         messages,
         model=model_name,
         **backend_options,
@@ -195,14 +195,14 @@ def _extract_usage(backend_response: Any) -> Usage:
     if isinstance(backend_response, dict):
         usage_data = backend_response.get("usage")
         if isinstance(usage_data, dict):
-            prompt_tokens = int(usage_data.get("prompt_tokens", 0))
-            completion_tokens = int(usage_data.get("completion_tokens", 0))
-            total_tokens = int(usage_data.get("total_tokens", 0))
-            return Usage(
-                prompt_tokens=prompt_tokens,
-                completion_tokens=completion_tokens,
-                total_tokens=total_tokens,
-            )
+            try:
+                return Usage(
+                    prompt_tokens=int(usage_data.get("prompt_tokens") or 0),
+                    completion_tokens=int(usage_data.get("completion_tokens") or 0),
+                    total_tokens=int(usage_data.get("total_tokens") or 0),
+                )
+            except (ValueError, TypeError):
+                pass  # Fall through to default usage
     return Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0)
 
 

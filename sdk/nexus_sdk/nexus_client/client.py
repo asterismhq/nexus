@@ -157,8 +157,12 @@ class NexusClient:
                     {
                         "role": getattr(msg, "type"),
                         "content": getattr(msg, "content"),
+                        "additional_kwargs": getattr(msg, "additional_kwargs", None)
+                        or None,
                     }
                 )
+                if normalized[-1]["additional_kwargs"] is None:
+                    normalized[-1].pop("additional_kwargs")
                 continue
             normalized.append({"role": "user", "content": str(msg)})
         return normalized

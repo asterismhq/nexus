@@ -192,7 +192,6 @@ async def test_mock_client_records_serialized_invocations_with_tools():
     assert recorded["messages"] == [
         {"role": "user", "content": "go find", "additional_kwargs": {"foo": "bar"}}
     ]
-    assert recorded["input"] == recorded["messages"]
     assert recorded["tools"] == [{"name": "web_search"}]
 
 
