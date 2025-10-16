@@ -49,8 +49,12 @@ class OllamaClient(LLMClientProtocol):
             payload["tools"] = self._tools
         payload.update(kwargs)
         stream = await self._client.chat(**payload)
-        async for chunk in stream:
-            yield chunk
+
+        async def _generator() -> AsyncIterator[dict[str, Any]]:
+            async for chunk in stream:
+                yield chunk
+
+        return _generator()
 
     def bind_tools(self, tools: list[Any]) -> "OllamaClient":
         self._tools = tools

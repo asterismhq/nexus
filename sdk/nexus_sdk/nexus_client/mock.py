@@ -4,7 +4,11 @@ import time
 import uuid
 from typing import Any, Dict, List, Sequence
 
-from .base_client import _normalize_backend_name, _validate_response_format
+from .base_client import (
+    _normalize_backend_name,
+    _prepare_invoke_payload,
+    _validate_response_format,
+)
 from .protocol import NexusClientProtocol
 from .response import LangChainResponse
 from .strategies import (
@@ -48,23 +52,7 @@ class MockNexusClient:
 
     async def invoke(self, input_data: Any, **kwargs: Any) -> Any:
         payload = self._prepare_payload(input_data)
-        if "backend" in payload and isinstance(payload["backend"], str):
-            payload["backend"] = _normalize_backend_name(payload["backend"])
-
-        override_backend = kwargs.pop("backend", None)
-        if override_backend:
-            payload["backend"] = _normalize_backend_name(str(override_backend))
-        else:
-            payload.setdefault("backend", self._backend)
-
-        if kwargs:
-            filtered_kwargs = {
-                key: value
-                for key, value in kwargs.items()
-                if key not in {"model", "messages", "tools"}
-            }
-            if filtered_kwargs:
-                payload.update(filtered_kwargs)
+        _prepare_invoke_payload(payload, kwargs, self._backend)
 
         self.invocations.append(payload)
         response = self._resolve_response(payload)

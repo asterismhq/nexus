@@ -52,14 +52,18 @@ class MLXClient(LLMClientProtocol):
                 headers=headers,
             ) as response:
                 response.raise_for_status()
-                async for line in response.aiter_lines():
-                    if not line:
-                        continue
-                    if line.startswith("data:"):
-                        data_text = line[len("data:") :].strip()
-                        if data_text == "[DONE]":
-                            break
-                        yield json.loads(data_text)
+
+                async def _generator() -> AsyncIterator[dict[str, Any]]:
+                    async for line in response.aiter_lines():
+                        if not line:
+                            continue
+                        if line.startswith("data:"):
+                            data_text = line[len("data:") :].strip()
+                            if data_text == "[DONE]":
+                                break
+                            yield json.loads(data_text)
+
+                return _generator()
 
     def bind_tools(self, tools: list[Any]) -> "MLXClient":
         self._tools = tools

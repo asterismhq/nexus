@@ -15,6 +15,29 @@ def _normalize_backend_name(value: str) -> str:
     return value.lower().strip()
 
 
+def _prepare_invoke_payload(
+    payload: Dict[str, Any], kwargs: Dict[str, Any], backend: str
+) -> None:
+    """Prepare payload for invoke by handling backend and kwargs."""
+    if "backend" in payload and isinstance(payload["backend"], str):
+        payload["backend"] = _normalize_backend_name(payload["backend"])
+
+    override_backend = kwargs.pop("backend", None)
+    if override_backend:
+        payload["backend"] = _normalize_backend_name(str(override_backend))
+    else:
+        payload.setdefault("backend", backend)
+
+    if kwargs:
+        filtered_kwargs = {
+            key: value
+            for key, value in kwargs.items()
+            if key not in {"model", "messages", "tools"}
+        }
+        if filtered_kwargs:
+            payload.update(filtered_kwargs)
+
+
 def _validate_response_format(response_format: str) -> str:
     if response_format not in _SUPPORTED_RESPONSE_FORMATS:
         supported = ", ".join(sorted(_SUPPORTED_RESPONSE_FORMATS))
@@ -49,23 +72,7 @@ class BaseNexusClient(NexusClientProtocol):
 
     async def invoke(self, input_data: Any, **kwargs: Any) -> Any:
         payload = self._prepare_payload(input_data)
-        if "backend" in payload and isinstance(payload["backend"], str):
-            payload["backend"] = _normalize_backend_name(payload["backend"])
-
-        override_backend = kwargs.pop("backend", None)
-        if override_backend:
-            payload["backend"] = _normalize_backend_name(str(override_backend))
-        else:
-            payload.setdefault("backend", self._backend)
-
-        if kwargs:
-            filtered_kwargs = {
-                key: value
-                for key, value in kwargs.items()
-                if key not in {"model", "messages", "tools"}
-            }
-            if filtered_kwargs:
-                payload.update(filtered_kwargs)
+        _prepare_invoke_payload(payload, kwargs, self._backend)
 
         response = await self._client.post("/v1/chat/completions", json=payload)
         response.raise_for_status()
@@ -115,7 +122,12 @@ class BaseNexusClient(NexusClientProtocol):
         )
 
     def _prepare_payload(self, input_data: Any) -> Dict[str, Any]:
-        """Normalize payload for the /invoke endpoint."""
+        """Normalize payload for the /invoke endpoint.
+        Accepts:
+        - Raw dicts (backwards compatibility)
+        - LangChain message objects (list with `.type`/`.content`)
+        - Plain lists of dicts/strings
+        """
 
         if isinstance(input_data, dict):
             payload = dict(input_data)

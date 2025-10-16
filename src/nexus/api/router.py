@@ -100,7 +100,7 @@ async def _stream_chat_completions(
             ],
         }
 
-    stream_iterator = llm_client.stream(
+    stream_iterator = await llm_client.stream(
         messages,
         model=model_name,
         **backend_options,

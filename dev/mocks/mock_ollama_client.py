@@ -41,28 +41,31 @@ class MockOllamaClient(LLMClientProtocol):
         }
         self.invocations.append(payload)
 
-        yield {
-            "id": "chatcmpl-mock",
-            "object": "chat.completion.chunk",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {"content": "Mock Ollama response"},
-                    "finish_reason": None,
-                }
-            ],
-        }
-        yield {
-            "id": "chatcmpl-mock",
-            "object": "chat.completion.chunk",
-            "choices": [
-                {
-                    "index": 0,
-                    "delta": {},
-                    "finish_reason": "stop",
-                }
-            ],
-        }
+        async def _generator() -> AsyncIterator[dict[str, Any]]:
+            yield {
+                "id": "chatcmpl-mock",
+                "object": "chat.completion.chunk",
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": "Mock Ollama response"},
+                        "finish_reason": None,
+                    }
+                ],
+            }
+            yield {
+                "id": "chatcmpl-mock",
+                "object": "chat.completion.chunk",
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": "stop",
+                    }
+                ],
+            }
+
+        return _generator()
 
     def bind_tools(self, tools: list[Any]) -> "MockOllamaClient":
         self.bound_tools = tools
