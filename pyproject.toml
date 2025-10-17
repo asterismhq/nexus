@@ -1,6 +1,6 @@
 [project]
 name = "nexus"
-version = "3.0.0"
+version = "3.0.1"
 description = "A database-independent FastAPI project template."
 authors = [
     { name = "akitorahayashi" }
