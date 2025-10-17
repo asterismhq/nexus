@@ -62,12 +62,6 @@ class NexusSettings(BaseSettings):
         description="Toggle mock MLX client for tests.",
         alias="NEXUS_USE_MOCK_MLX",
     )
-    use_mock_vllm: bool = Field(
-        default=False,
-        title="Use Mock vLLM",
-        description="Toggle mock vLLM client for tests.",
-        alias="NEXUS_USE_MOCK_VLLM",
-    )
 
 
 settings = NexusSettings()
