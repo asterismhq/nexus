@@ -13,6 +13,7 @@ from .strategies import (
     SequenceResponseStrategy,
     SimpleResponseStrategy,
 )
+from .vllm_client import NexusVLLMClient
 
 __all__ = [
     "CallbackResponseStrategy",
@@ -26,4 +27,5 @@ __all__ = [
     "NexusMLXClient",
     "NexusOllamaClient",
     "NexusClientProtocol",
+    "NexusVLLMClient",
 ]

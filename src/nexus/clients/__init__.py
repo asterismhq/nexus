@@ -2,5 +2,6 @@
 
 from .mlx_client import MLXClient
 from .ollama_client import OllamaClient
+from .vllm_client import VLLMClient
 
-__all__ = ["MLXClient", "OllamaClient"]
+__all__ = ["MLXClient", "OllamaClient", "VLLMClient"]

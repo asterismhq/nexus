@@ -37,12 +37,17 @@ Environment variables are loaded from `.env` (managed by `just setup`):
   * `NEXUS_APP_NAME` – application display name (default `nexus`).
   * `NEXUS_BIND_IP` / `NEXUS_BIND_PORT` – bind address when running under Docker (defaults `0.0.0.0:8000`).
   * `NEXUS_DEV_PORT` – port used by `just dev` (default `8000`).
-  * `NEXUS_LLM_BACKEND` – active LLM backend (`ollama` or `mlx`).
-  * `NEXUS_USE_MOCK_OLLAMA` / `NEXUS_USE_MOCK_MLX` – toggle mock clients for tests.
+  * `NEXUS_LLM_BACKEND` – active LLM backend (`ollama`, `mlx`, or `vllm`).
+  * `NEXUS_USE_MOCK_OLLAMA` / `NEXUS_USE_MOCK_MLX` / `NEXUS_USE_MOCK_VLLM` – toggle mock clients for tests.
   * `NEXUS_OLLAMA_HOST`, `NEXUS_OLLAMA_MODEL` – Ollama connection details.
   * `NEXUS_MLX_HOST` – remote MLX server base URL (required for MLX backend).
   * `NEXUS_MLX_TIMEOUT` – timeout applied to remote MLX HTTP calls (seconds).
   * `NEXUS_MLX_MODEL` – identifier for the MLX model to load.
+  * `NEXUS_VLLM_HOST` – base URL for OpenAI-compatible vLLM deployments.
+  * `NEXUS_VLLM_MODEL` – default vLLM model identifier forwarded on each call.
+  * `NEXUS_VLLM_TEMPERATURE`, `NEXUS_VLLM_MAX_TOKENS`, `NEXUS_VLLM_TOP_P` – optional sampling defaults.
+  * `NEXUS_VLLM_TIMEOUT` – timeout applied to vLLM HTTP calls (seconds).
+  * `NEXUS_VLLM_API_KEY` – optional bearer token for authenticated vLLM servers.
 
 ### Remote MLX Servers
 

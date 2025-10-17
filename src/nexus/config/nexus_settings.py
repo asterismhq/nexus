@@ -47,7 +47,7 @@ class NexusSettings(BaseSettings):
     llm_backend: str = Field(
         default="ollama",
         title="LLM Backend",
-        description="The active LLM backend (ollama or mlx).",
+        description="The active LLM backend (ollama, mlx, or vllm).",
         alias="NEXUS_LLM_BACKEND",
     )
     use_mock_ollama: bool = Field(
@@ -61,6 +61,12 @@ class NexusSettings(BaseSettings):
         title="Use Mock MLX",
         description="Toggle mock MLX client for tests.",
         alias="NEXUS_USE_MOCK_MLX",
+    )
+    use_mock_vllm: bool = Field(
+        default=False,
+        title="Use Mock vLLM",
+        description="Toggle mock vLLM client for tests.",
+        alias="NEXUS_USE_MOCK_VLLM",
     )
 
 
