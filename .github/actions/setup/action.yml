@@ -27,10 +27,7 @@ runs:
       if: inputs.git-token != ''
       env:
         AUTH_TOKEN: ${{ inputs.git-token }}
-      run: |
-        if [ -n "$AUTH_TOKEN" ]; then
-          git config --global url."https://oauth2:${AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
-        fi
+      run: git config --global url."https://oauth2:${AUTH_TOKEN}@github.com/".insteadOf "https://github.com/"
       shell: bash
 
     - name: Install dependencies
